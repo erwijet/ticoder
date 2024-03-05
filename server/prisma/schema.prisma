@@ -1,0 +1,36 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "cargo prisma"
+  output   = "../src/prisma.rs"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int    @id @default(autoincrement())
+  givenName String
+  surname   String
+  picture   String
+  username  String @unique
+  email     String @unique
+  password  String
+
+  programs  Program[]
+}
+
+model Program {
+  id        Int @id @default(autoincrement())
+
+  userId    Int
+  user      User @relation(fields: [userId], references: [id])
+
+  name      String
+  createdAt DateTime @default(now())
+  blockly   String?
+  public    Boolean  @default(false)
+}
