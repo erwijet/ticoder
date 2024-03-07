@@ -3,14 +3,11 @@
 export type Procedures = {
     queries: 
         { key: "auth", input: never, result: GetAuthResp } | 
-        { key: "me", input: never, result: User },
-    mutations: 
-        { key: "mut", input: [string, string], result: TestResult },
+        { key: "me", input: never, result: GetMeResp },
+    mutations: never,
     subscriptions: never
 };
 
 export type GetAuthResp = { url: string }
 
-export type User = { id: number; givenName: string; surname: string; picture: string; username: string; email: string; password: string }
-
-export type TestResult = [string, string]
+export type GetMeResp = { name: string }

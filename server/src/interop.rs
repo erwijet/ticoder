@@ -18,16 +18,21 @@ use crate::{maybe, status};
 use tap::Pipe;
 
 pub trait ExecErrorIntoResponse {
-    fn into_response(self) -> Response;
+    fn into_response(self, id: &String) -> Response;
 }
 
 impl ExecErrorIntoResponse for ExecError {
-    fn into_response(self) -> Response {
+    fn into_response(self, id: &String) -> Response {
         let err: JsonRPCError = self.into();
 
         (
             StatusCode::from_u16(err.code as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
-            serde_json::to_string(&err).unwrap(),
+            serde_json::to_string(&jsonrpc::Response {
+                jsonrpc: "2.0",
+                id: jsonrpc::RequestId::String(id.to_owned()),
+                result: jsonrpc::ResponseInner::Error(err),
+            })
+            .unwrap(),
         )
             .into_response()
     }
@@ -38,13 +43,13 @@ pub trait IntoAxumRouter<S: Clone + Send + Sync + 'static = ()> {
     fn into_axum_router(self, path: &str) -> axum::Router<S>;
 }
 
-impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for rspc::Router<()> {
+impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for rspc::Router<HeaderMap> {
     fn into_axum_router(self, path: &str) -> axum::Router<S> {
         self.arced().into_axum_router(path)
     }
 }
 
-impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for Arc<rspc::Router<()>> {
+impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for Arc<rspc::Router<HeaderMap>> {
     fn into_axum_router(self, path_base: &str) -> axum::Router<S> {
         let query_router = self.clone();
         let mutation_router = self.clone();
@@ -59,11 +64,11 @@ impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for Arc<rspc::Router<()
                         let id = params.get("id").unwrap().to_owned();
 
                         let exec_result = query_router
-                            .exec((), rspc::ExecKind::Query, id.clone(), None)
+                            .exec(headers, rspc::ExecKind::Query, id.clone(), None)
                             .await;
 
                         maybe!(exec_result, let err in {
-                            return err.into_response();
+                            return err.into_response(&id);
                         })
                         .pipe(|result| jsonrpc::Response {
                             jsonrpc: "2.0",
@@ -76,31 +81,34 @@ impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for Arc<rspc::Router<()
             )
             .route(
                 path,
-                post(|Path(params): Path<HashMap<String, String>>, headers: HeaderMap, body: String| async move {
+                post(
+                    |Path(params): Path<HashMap<String, String>>,
+                     headers: HeaderMap,
+                     body: String| async move {
+                        let id = params.get("id").unwrap().to_owned();
 
-                    let id = params.get("id").unwrap().to_owned();
+                        let exec_result = mutation_router
+                            .exec(
+                                headers,
+                                rspc::ExecKind::Mutation,
+                                id.clone(),
+                                Some(maybe!(serde_json::from_str(&body), let err in {
+                                    return status(400, Some(err));
+                                })),
+                            )
+                            .await;
 
-                    let exec_result = mutation_router
-                        .exec(
-                            (),
-                            rspc::ExecKind::Mutation,
-                            id.clone(),
-                            Some(maybe!(serde_json::from_str(&body), let err in {
-                                return status(400, Some(err));
-                            })),
-                        )
-                        .await;
-
-                    maybe!(exec_result, let err in {
-                        return err.into_response()
-                    })
-                    .pipe(|result| jsonrpc::Response {
-                        jsonrpc: "2.0",
-                        id: jsonrpc::RequestId::String(id),
-                        result: jsonrpc::ResponseInner::Response(result),
-                    })
-                    .pipe(|rpc_res| Json(rpc_res).into_response())
-                }),
+                        maybe!(exec_result, let err in {
+                            return err.into_response(&id)
+                        })
+                        .pipe(|result| jsonrpc::Response {
+                            jsonrpc: "2.0",
+                            id: jsonrpc::RequestId::String(id),
+                            result: jsonrpc::ResponseInner::Response(result),
+                        })
+                        .pipe(|rpc_res| Json(rpc_res).into_response())
+                    },
+                ),
             )
     }
 }

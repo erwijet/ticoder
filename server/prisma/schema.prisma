@@ -11,23 +11,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        Int    @id @default(autoincrement())
-  givenName String
-  surname   String
-  picture   String
-  username  String @unique
-  email     String @unique
-  password  String
-
-  programs  Program[]
-}
-
 model Program {
   id        Int @id @default(autoincrement())
 
   userId    Int
-  user      User @relation(fields: [userId], references: [id])
 
   name      String
   createdAt DateTime @default(now())

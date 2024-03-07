@@ -4,8 +4,8 @@ mod macros;
 #[allow(warnings, unused)]
 mod prisma;
 mod router;
-mod server;
 mod util;
+mod notary;
 
 use std::{borrow::Borrow, collections::HashMap, ops::Deref, os::macos::raw::stat, sync::Arc};
 
@@ -28,7 +28,6 @@ use rspc::{
     ExecError,
 };
 use serde_json::json;
-use server::ServerContext;
 use tap::Pipe;
 use tower_http::cors::{Any, CorsLayer};
 use util::get_project_root;

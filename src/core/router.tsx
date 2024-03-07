@@ -5,6 +5,7 @@ import { App } from "../App";
 import { Login } from "../pages/login";
 import { Token } from "../pages/token";
 import { User, useUserStore } from "./userStore";
+import { Logout } from "src/pages/logout";
 
 type RouterPath =
   | {
@@ -30,6 +31,11 @@ const paths = {
     get: () => "/login",
     path: "/login",
     component: Login,
+  },
+  logout: {
+    get: () => "/logout",
+    path: "/logout",
+    component: Logout,
   },
   token: {
     get: () => "/token",

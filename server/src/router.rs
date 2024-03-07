@@ -1,4 +1,5 @@
 use dotenv::dotenv;
+use http::HeaderMap;
 use prisma_client_rust::query_core::schema_builder::build;
 use rspc::Router;
 use serde::{ Deserialize, Serialize };
@@ -6,9 +7,9 @@ use specta::Type;
 use std::{ borrow::Borrow, io::Read, sync::Arc };
 use tap::{ Pipe, Tap };
 
-use crate::{ db::get_prisma_client, prisma::user, server::ServerContext };
+use crate::{ db::get_prisma_client, notary::{ self, NotaryAuthResp }, prisma::program };
 
-trait TicoderRouterError<T> {
+pub trait TicoderRouterError<T> {
     fn or_bad_request<S: Into<String>>(self, msg: S) -> Result<T, rspc::Error>;
     fn or_server_error<S: Into<String>>(self, msg: S) -> Result<T, rspc::Error>;
 }
@@ -33,11 +34,13 @@ impl<T> TicoderRouterError<T> for Option<T> {
     }
 }
 
-#[derive(Debug, Serialize, Type)]
-struct AuthLoginParams {}
+struct AuthedCtx {
+    headers: HeaderMap,
+    claims: notary::NotaryClaims,
+}
 
 #[derive(Debug, Serialize, Type)]
-struct TestResult(String, String);
+struct AuthLoginParams {}
 
 // pub fn get_auth_router() -> Arc<Router<()>> {
 //     rspc::Router::<()>::new()
@@ -47,67 +50,59 @@ struct TestResult(String, String);
 //         .build()
 //         .arced()
 // }
-
 #[derive(Debug, Serialize, Type)]
 struct GetAuthResp {
     url: String,
 }
 
-#[derive(Deserialize)]
-struct NotaryAuthResp {
-    url: String,
+#[derive(Debug, Serialize, Type)]
+struct GetMeResp {
+    name: String
 }
 
-pub fn get_router() -> Arc<Router<()>> {
+pub fn get_router() -> Arc<Router<HeaderMap>> {
     dotenv().ok();
 
-    rspc::Router::<()>
+    rspc::Router::<HeaderMap>
         ::new()
         .query("auth", |t| {
             t(|_ctx, _: ()| async move {
-                let notary_server = std::env
-                    ::var("NOTARY_HOST")
-                    .expect("missing env var 'NOTARY_HOST'");
-                let notary_svc_key = std::env
-                    ::var("NOTARY_KEY")
-                    .expect("missing env var 'NOTARY_KEY'");
-
-                let NotaryAuthResp { url } = reqwest
-                    ::get(
-                        format!(
-                            "{}/authorize/ticoder?via=google&key={}&callback=http://localhost:3000/token",
-                            notary_server,
-                            notary_svc_key
-                        )
-                    ).await
-                    .or_server_error("failed to connect to notary server")?
-                    .text().await
-                    .or_server_error("error reading from notary server")?
-                    .pipe(|it| serde_json::from_str(&it).unwrap());
-
-                Ok(GetAuthResp {
-                    url,
-                })
+                notary
+                    ::get_oauth_url().await
+                    .or_server_error("failed to fetch OAuth2 url from notary server")?
+                    .pipe(|payload| Ok(GetAuthResp { url: payload.url }))
             })
         })
         .middleware(|builder| {
+            fn no_auth() -> rspc::Error {
+                rspc::Error::new(rspc::ErrorCode::Unauthorized, "unauthorized".into())
+            }
+
             builder.middleware(|prev| async move {
-                Ok(prev.with_ctx(ServerContext { actor_id: 0 }))
+                let headers = prev.ctx.clone();
+
+                let claims = headers
+                    .get("authorization")
+                    .ok_or(no_auth())?
+                    .to_str()
+                    .unwrap()
+                    .strip_prefix("Bearer ")
+                    .ok_or(no_auth())?
+                    .pipe(notary::inspect_token).await
+                    .or_server_error("failed to inspect incoming token")?
+                    .claims
+                    .ok_or(no_auth())?;
+
+                Ok(prev.with_ctx(AuthedCtx { headers, claims }))
             })
         })
         .query("me", |t| {
             t(|ctx, _: ()| async move {
-                let user = get_prisma_client()
-                    .user()
-                    .find_first(vec![user::id::equals(ctx.actor_id)])
-                    .exec().await
-                    .unwrap()
-                    .or_bad_request(format!("unknown actor_id: {}", ctx.actor_id))?;
-
-                Ok(user)
+                Ok(GetMeResp {
+                    name: ctx.claims.fullname
+                })
             })
         })
-        .mutation("mut", |t| t(|ctx, var: (String, String)| { TestResult(var.0, var.1) }))
         .build()
         .arced()
 }

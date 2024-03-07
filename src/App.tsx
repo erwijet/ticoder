@@ -3,6 +3,7 @@ import { api } from "@lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Protected } from "./core/router";
 import { User } from "./core/userStore";
+import Navbar from "./components/navbar";
 
 export function App(props: { user: User }) {
   const { data } = useQuery({
@@ -12,16 +13,8 @@ export function App(props: { user: User }) {
 
   return (
     <div>
+      <Navbar />
       <pre>{JSON.stringify({ data })}</pre>
-      <Button
-        onClick={() =>
-          api
-            .mutation(["mut", ["one", "two"]])
-            .then((res) => alert(JSON.stringify({ res })))
-        }
-      >
-        Click Me!
-      </Button>
     </div>
   );
 }

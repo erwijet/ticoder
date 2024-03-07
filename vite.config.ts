@@ -1,6 +1,7 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
+import svgr from 'vite-plugin-svgr';
 import process from 'node:process';
 
 export default defineConfig(({ mode }) => {
@@ -8,7 +9,7 @@ export default defineConfig(({ mode }) => {
   process.env = { ...process.env, ...env };
 
   return {
-    plugins: [react(), tsConfigPaths()],
+    plugins: [svgr(), react(), tsConfigPaths()],
     build: {
       outDir: "build",
     },
