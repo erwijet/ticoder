@@ -109,7 +109,7 @@ export const Navbar = () => {
                 textOverflow={"ellipsis"}
                 style={{ textWrap: "nowrap" }}
               >
-                Tyler Holewinski
+                My Account
               </Heading>
             </Stack>
           </MenuButton>
