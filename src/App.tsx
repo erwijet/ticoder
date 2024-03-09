@@ -1,9 +1,7 @@
-import { Button } from "@chakra-ui/react";
 import { api } from "@lib/api";
 import { useQuery } from "@tanstack/react-query";
-import { Protected } from "./core/router";
+import { Shell } from "./components/shell";
 import { User } from "./core/userStore";
-import Navbar from "./components/navbar";
 
 export function App(props: { user: User }) {
   const { data } = useQuery({
@@ -12,9 +10,8 @@ export function App(props: { user: User }) {
   });
 
   return (
-    <div>
-      <Navbar />
+    <Shell>
       <pre>{JSON.stringify({ data })}</pre>
-    </div>
+    </Shell>
   );
 }

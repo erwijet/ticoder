@@ -1,28 +1,30 @@
 import {
-  Avatar,
   Box,
+  Button,
   Divider,
-  HStack,
   Heading,
   Image,
   Menu,
   MenuButton,
   MenuItem,
   MenuList,
-  Spacer,
   Stack,
-  Text,
   VStack,
   useToken,
 } from "@chakra-ui/react";
-import { User, useUserStore } from "src/core/userStore";
-import { err } from "@tsly/core";
-import { Link } from "react-router-dom";
-import Brand from "../public/brand.svg?react";
 import { css } from "@emotion/css";
+import { err } from "@tsly/core";
+import { Link, useLocation } from "react-router-dom";
+import { User, useUserStore } from "src/core/userStore";
+import Brand from "../public/brand.svg?react";
+import { RouterPath, paths } from "src/core/router";
+import { IconCode, IconHome } from "@tabler/icons-react";
 
-const Navbar = () => {
+// const items = [paths.root, paths.editor] satisfies RouterPath[];
+
+export const Navbar = () => {
   const user: User = useUserStore((s) => s.user) ?? err("user data not set");
+  const { pathname } = useLocation();
   const [fill] = useToken("colors", ["gray.300"]);
 
   return (
@@ -65,7 +67,31 @@ const Navbar = () => {
             </Heading>
           </Stack>
           <Divider />
+
+          <Stack gap={2} mt={8} mx={4}>
+            <Button
+              colorScheme="blackAlpha"
+              color={"white"}
+              variant={pathname == "/" ? "solid" : "ghost"}
+              as={Link}
+              to={"/"}
+              leftIcon={<IconHome size={16} />}
+            >
+              Home
+            </Button>
+            <Button
+              colorScheme="blackAlpha"
+              color={"white"}
+              variant={pathname == "/editor" ? "solid" : "ghost"}
+              as={Link}
+              to={"/editor"}
+              leftIcon={<IconCode size={16} />}
+            >
+              Editor
+            </Button>
+          </Stack>
         </Stack>
+
         <Menu>
           <MenuButton w="100%" bg="gray.700" p={4}>
             <Stack direction={"row"} align="center" w="100%">
@@ -99,5 +125,3 @@ const Navbar = () => {
     </Box>
   );
 };
-
-export default Navbar;
