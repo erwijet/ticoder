@@ -22,8 +22,10 @@ import {
   MenuItem,
   MenuOptionGroup,
   MenuItemOption,
+  useConst,
 } from "@chakra-ui/react";
 import { api } from "@lib/api";
+import { useTiCalc } from "@lib/react-ticalc";
 import Monaco, { OnMount } from "@monaco-editor/react";
 import {
   IconCalculator,
@@ -38,10 +40,10 @@ import { err } from "@tsly/core";
 import { useWaitFor } from "@tsly/hooks";
 import { initVimMode } from "monaco-vim";
 import { run } from "node:test";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Shell } from "src/components/shell";
 import { User } from "src/core/userStore";
-import { ticalc, tifiles } from 'ticalc-usb';
+import { ticalc, tifiles } from "ticalc-usb";
 import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
 
 function ProgramTitleControls() {
@@ -80,35 +82,33 @@ function ProgramTitleControls() {
 export function Editor(props: { user: User }) {
   const [name, setName] = useState("PROGRAM");
   const [blockly, setBlockly] = useState("");
-  const [calc, setCalc] = useState<any>(null);
-  const [didInit, setDidInit] = useState(false);
+  const [queued, setQueued] = useState<any>(undefined);
 
   const handleEditorDidMount: OnMount = (editor, _monaco) => {
     initVimMode(editor, null);
   };
 
-  useEffect(() => {
-    if (didInit) return;
-
-    ticalc.init({ supportLevel: 'none' });
-
-    ticalc.addEventListener('disconnect', (target: any) => {
-      if (calc != target) return;
-      setCalc(null);
-    });
-
-    ticalc.addEventListener('connect', async (target: any) => {
-      if (await target.isReady()) { // <-- fails here
-        setCalc(target);
-      }
-    });
-
-    setDidInit(true);
-  }, []);
+  const { calc, choose } = useTiCalc();
 
   async function run() {
-    await ticalc.choose();
+    await choose();
+
+    const { id } = await api.mutation(["program:create", { blockly, name }]);
+    const compiled = await api.query(["program:compile", { program_id: id }]);
+
+    if (compiled.status == "Err") return err(compiled.reason);
+
+    const file = tifiles.parseFile(new Uint8Array(compiled.buffer));
+    setQueued(file);
   }
+
+  useEffect(() => {
+    if (!calc || !queued) return;
+
+    if (!tifiles.isValid(queued)) return console.error("ivnalid file");
+
+    calc.sendFile(queued).then(() => setQueued(false));
+  }, [queued, calc]);
 
   return (
     <Shell>
