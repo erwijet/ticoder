@@ -32,6 +32,9 @@ dependencies:
   '@tsly/core':
     specifier: ^1.1.0
     version: 1.1.0
+  '@tsly/hooks':
+    specifier: ^1.1.0
+    version: 1.1.0
   '@tsly/maybe':
     specifier: ^1.2.0
     version: 1.2.0
@@ -65,6 +68,12 @@ dependencies:
   sonner:
     specifier: ^1.4.0
     version: 1.4.0(react-dom@18.2.0)(react@18.2.0)
+  ticalc-usb:
+    specifier: ^1.1.2
+    version: 1.1.2
+  usb:
+    specifier: ^2.12.1
+    version: 2.12.1
   zod:
     specifier: ^3.22.4
     version: 3.22.4
@@ -2112,6 +2121,12 @@ packages:
     resolution: {integrity: sha512-Ck2JY7qvk97Qokf48LGOKBWRBtFqeDNsx6EUk76C45u9g4JVx5IKZahPbvi50NQOD+XB4foIVEnXCv6jUZAcVQ==}
     dev: false
 
+  /@tsly/hooks@1.1.0:
+    resolution: {integrity: sha512-ITTzHbI3g+myQcHnehNMdDb0hZyWU4JKWvUsUKiI/yxDu2ZGHZrC74/3Q7zGP20EJCkv0mRPgNaqgPlSMWtfOg==}
+    dependencies:
+      react: 18.2.0
+    dev: false
+
   /@tsly/maybe@1.2.0:
     resolution: {integrity: sha512-tFXYstrFh7jZj+xLrM/zzohuiVb5WUh6BaCyboMGzT88Kf1xWpc+inKMqqAsCw0kgvmzeszkEXJgCJE3RGi/4g==}
     dev: false
@@ -2177,7 +2192,12 @@ packages:
     resolution: {integrity: sha512-QmgQZGWu1Yw9TDyAP9ZzpFJKynYNeOvwMJmaxABfieQoVoiVOS6MN1WSpqpRcbeA5+RW82kraAVxCCJg+780Qw==}
     dependencies:
       undici-types: 5.26.5
-    dev: true
+
+  /@types/node@8.10.66:
+    resolution: {integrity: sha512-tktOkFUA4kXx2hhhrB8bIFb5TbwzS4uOhKEmwiD+NoiL0qtP2OQ9mFldbgD4dV1djrlBYP6eBuQZiWjuHUpqFw==}
+    requiresBuild: true
+    dev: false
+    optional: true
 
   /@types/parse-json@4.0.2:
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
@@ -2216,6 +2236,19 @@ packages:
 
   /@types/scheduler@0.16.8:
     resolution: {integrity: sha512-WZLiwShhwLRmeV6zH+GkbOFT6Z6VklCItrDioxUnv+u4Ll+8vKeFySoFyK/0ctcRpOmwAicELfmys1sDc/Rw+A==}
+
+  /@types/usb@1.5.4:
+    resolution: {integrity: sha512-NOUza/8yuswu6RoECQyPHEjA34qpDaeONQ72fm+bCnnN2DJjDePAY+NsmV17H88oIlq4JlJ2mD5Kh5d6R2MwTQ==}
+    requiresBuild: true
+    dependencies:
+      '@types/node': 20.11.17
+    dev: false
+    optional: true
+
+  /@types/w3c-web-usb@1.0.10:
+    resolution: {integrity: sha512-CHgUI5kTc/QLMP8hODUHhge0D4vx+9UiAwIGiT0sTy/B2XpdX1U5rJt6JSISgr6ikRT7vxV9EVAFeYZqUnl1gQ==}
+    requiresBuild: true
+    dev: false
 
   /@vitejs/plugin-react@4.2.1(vite@5.1.1):
     resolution: {integrity: sha512-oojO9IDc4nCUUi8qIR11KoQm0XFFLIwsRBwHRR4d/88IWghn1y6ckz/bJ8GHDCsYEJee8mDzqtJxh15/cisJNQ==}
@@ -2732,6 +2765,23 @@ packages:
       tslib: 2.6.2
     dev: true
 
+  /node-addon-api@4.3.0:
+    resolution: {integrity: sha512-73sE9+3UaLYYFmDsFZnqCInzPyh3MqIwZO9cw58yIqAZhONrrabrYyYe3TuIqtIiOuTXVhsGau8hcrhhwSsDIQ==}
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /node-addon-api@7.1.0:
+    resolution: {integrity: sha512-mNcltoe1R8o7STTegSOHdnJNN7s5EUvhoS7ShnTHDyOSd+8H+UdWODq6qSv67PjC8Zc5JRT8+oLAMCr0SIXw7g==}
+    engines: {node: ^16 || ^18 || >= 20}
+    dev: false
+
+  /node-gyp-build@4.8.0:
+    resolution: {integrity: sha512-u6fs2AEUljNho3EYTJNBfImO5QTo/J/1Etd+NVdCj7qWKUSN/bSLkZwhDv7I+w/MSC6qJ4cknepkAYykDdK8og==}
+    hasBin: true
+    requiresBuild: true
+    dev: false
+
   /node-releases@2.0.14:
     resolution: {integrity: sha512-y10wOWt8yZpqXmOgRo77WaHEmhYQYGNA6y421PKsKYWEK8aW+cqAphborZDhqfyKrbZEN92CN1X2KbafY2s7Yw==}
     dev: true
@@ -3072,6 +3122,12 @@ packages:
     resolution: {integrity: sha512-e4hG1hRwoOdRb37cIMSgzNsxyzKfayW6VOflrwvR+/bzrkyxY/31WkbgnQpgtrNp1SdpJvpUAGTa/ZoiPNDuRQ==}
     dev: true
 
+  /ticalc-usb@1.1.2:
+    resolution: {integrity: sha512-wwr1tKGdkRoT13vG0PeQmQJ+8DaTcGd8DTadOtuduhQxU9G8Q7FLAg8GTe9ZjnqnPhO9uxZimIn4Nc8xvrMRiQ==}
+    optionalDependencies:
+      webusb: 2.2.0
+    dev: false
+
   /tiny-invariant@1.3.1:
     resolution: {integrity: sha512-AD5ih2NlSssTCwsMznbvwMZpJ1cbhkGd2uueNxzv2jDlEeZdU04JQfRnggJQ8DrcVBGjAsCKwFBbDlVNtEMlzw==}
     dev: false
@@ -3109,7 +3165,6 @@ packages:
 
   /undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
-    dev: true
 
   /update-browserslist-db@1.0.13(browserslist@4.22.3):
     resolution: {integrity: sha512-xebP81SNcPuNpPP3uzeW1NYXxI3rxyJzF3pD6sH4jE7o/IX+WtSpwnVU+qIsDPyk0d3hmFQ7mjqc6AtV604hbg==}
@@ -3121,6 +3176,26 @@ packages:
       escalade: 3.1.2
       picocolors: 1.0.0
     dev: true
+
+  /usb@1.9.2:
+    resolution: {integrity: sha512-dryNz030LWBPAf6gj8vyq0Iev3vPbCLHCT8dBw3gQRXRzVNsIdeuU+VjPp3ksmSPkeMAl1k+kQ14Ij0QHyeiAg==}
+    engines: {node: '>=10.16.0'}
+    requiresBuild: true
+    dependencies:
+      node-addon-api: 4.3.0
+      node-gyp-build: 4.8.0
+    dev: false
+    optional: true
+
+  /usb@2.12.1:
+    resolution: {integrity: sha512-hgtoSQUFuMXVJBApelpUTiX7ZB83MQCbYeHTBsHftA2JG7YZ76ycwIgKQhkhKqVY76C8K6xJscHpF7Ep0eG3pQ==}
+    engines: {node: '>=12.22.0 <13.0 || >=14.17.0'}
+    requiresBuild: true
+    dependencies:
+      '@types/w3c-web-usb': 1.0.10
+      node-addon-api: 7.1.0
+      node-gyp-build: 4.8.0
+    dev: false
 
   /use-callback-ref@1.3.1(@types/react@18.2.55)(react@18.2.0):
     resolution: {integrity: sha512-Lg4Vx1XZQauB42Hw3kK7JM6yjVjgFmFC5/Ab797s79aARomD2nEErc4mCgM8EZrARLmmbWpi5DGCadmK50DcAQ==}
@@ -3228,6 +3303,19 @@ packages:
     optionalDependencies:
       fsevents: 2.3.3
     dev: true
+
+  /webusb@2.2.0:
+    resolution: {integrity: sha512-EP6JOFIqR4vLoDWwtMROs94Sl/sZlmX1WApK9O8/rBMBEiYTrDlgQrfUQ4CW5o+GSxfbA+MpDRgGbEBa5q0ECw==}
+    engines: {node: '>=8.14.0'}
+    deprecated: This package is deprecated, please use the WebUSB API in the 'usb' package instead
+    requiresBuild: true
+    dependencies:
+      '@types/node': 8.10.66
+      '@types/usb': 1.5.4
+      '@types/w3c-web-usb': 1.0.10
+      usb: 1.9.2
+    dev: false
+    optional: true
 
   /wrap-ansi@7.0.0:
     resolution: {integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==}

@@ -14,7 +14,7 @@ datasource db {
 model Program {
   id        Int @id @default(autoincrement())
 
-  userId    Int
+  userId    String
 
   name      String
   createdAt DateTime @default(now())

@@ -8,10 +8,12 @@ import { useUserStore } from "src/core/userStore";
 export const api = createClient<Procedures>({
   transport: new FetchTransport("http://localhost:8080/rspc", (input, init) =>
     fetch(input, {
+      ...init,
       headers: {
         ...(maybe(useUserStore.getState().token)?.take((it) => ({
           Authorization: `Bearer ${it}`,
         })) ?? {}),
+        ...init?.headers,
       },
     })
   ),

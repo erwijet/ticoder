@@ -6,6 +6,7 @@ mod prisma;
 mod router;
 mod util;
 mod notary;
+mod routes;
 
 use std::{borrow::Borrow, collections::HashMap, ops::Deref, os::macos::raw::stat, sync::Arc};
 

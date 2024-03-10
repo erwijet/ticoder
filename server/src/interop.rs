@@ -1,11 +1,11 @@
 use std::{any::Any, cell::OnceCell, collections::HashMap, ops::Deref, sync::Arc};
 
 use axum::{
-    body::{self, Bytes},
-    extract::{FromRequest, Path, Request},
+    body::{self, Body, Bytes},
+    extract::{self, FromRequest, Path, Query, Request},
     response::{IntoResponse, Response},
     routing::{get, post},
-    Json,
+    Json, RequestPartsExt,
 };
 
 use http::{HeaderMap, StatusCode};
@@ -13,6 +13,7 @@ use rspc::{
     internal::jsonrpc::{self, JsonRPCError},
     ExecError,
 };
+use serde_json::Value;
 
 use crate::{maybe, status};
 use tap::Pipe;
@@ -49,6 +50,10 @@ impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for rspc::Router<Header
     }
 }
 
+struct RspcInput {
+    input: String,
+}
+
 impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for Arc<rspc::Router<HeaderMap>> {
     fn into_axum_router(self, path_base: &str) -> axum::Router<S> {
         let query_router = self.clone();
@@ -60,11 +65,32 @@ impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for Arc<rspc::Router<He
             .route(
                 path,
                 get(
-                    |Path(params): Path<HashMap<String, String>>, headers: HeaderMap| async move {
-                        let id = params.get("id").unwrap().to_owned();
+                    // |Path(params): Path<HashMap<String, String>>, headers: HeaderMap| async move {
+                    |request: Request<Body>| async move {
+                        let (mut parts, body) = request.into_parts();
+
+                        let path_params = parts
+                            .extract::<Path<HashMap<String, String>>>()
+                            .await
+                            .map(|Path(path_params)| path_params)
+                            .unwrap();
+
+                        let query_params = parts
+                            .extract::<Query<HashMap<String, String>>>()
+                            .await
+                            .map(|Query(params)| params)
+                            .unwrap();
+
+                        let headers = parts.headers.clone();
+                        let id = path_params.get("id").unwrap().to_owned();
+
+                        let input: Option<Value> = query_params
+                            .get("input")
+                            .map(|s| serde_json::from_str(s).unwrap());
+
 
                         let exec_result = query_router
-                            .exec(headers, rspc::ExecKind::Query, id.clone(), None)
+                            .exec(headers, rspc::ExecKind::Query, id.clone(), input)
                             .await;
 
                         maybe!(exec_result, let err in {

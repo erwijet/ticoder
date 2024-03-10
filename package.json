@@ -19,6 +19,7 @@
     "@tabler/icons-react": "^2.47.0",
     "@tanstack/react-query": "^5.20.1",
     "@tsly/core": "^1.1.0",
+    "@tsly/hooks": "^1.1.0",
     "@tsly/maybe": "^1.2.0",
     "@tsly/obj": "^1.0.0",
     "@types/react-dom": "^18.2.19",
@@ -30,6 +31,8 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.2",
     "sonner": "^1.4.0",
+    "ticalc-usb": "^1.1.2",
+    "usb": "^2.12.1",
     "zod": "^3.22.4",
     "zustand": "^4.5.2"
   },

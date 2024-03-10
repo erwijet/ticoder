@@ -28,6 +28,7 @@ serde = "1.0.196"
 serde_json = "1.0.113"
 specta = "1.0.5"
 tap = "1.0.1"
+tibrs = "0.1.0"
 tokio = { version = "1.36.0", features = ["full"] }
 tower = "0.4.13"
 tower-http = { version = "0.5.1", features = ["cors"] }

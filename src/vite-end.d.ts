@@ -12,3 +12,4 @@ interface ImportMeta {
 //
 
 declare module "monaco-vim";
+declare module "ticalc-usb";
