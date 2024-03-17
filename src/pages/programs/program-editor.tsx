@@ -1,50 +1,39 @@
 import {
-  Badge,
-  Text,
+  Button,
   ButtonGroup,
+  Divider,
   Editable,
   EditableInput,
   EditablePreview,
   Flex,
+  HStack,
   IconButton,
   Input,
-  Stack,
-  useEditableControls,
-  FormControl,
-  FormLabel,
-  Kbd,
-  Button,
-  Divider,
-  HStack,
   Menu,
   MenuButton,
-  MenuList,
-  MenuItem,
-  MenuOptionGroup,
   MenuItemOption,
-  useConst,
+  MenuList,
+  MenuOptionGroup,
+  Spinner,
+  Stack,
+  Toast,
+  useEditableControls,
 } from "@chakra-ui/react";
 import { api } from "@lib/api";
 import { useTiCalc } from "@lib/react-ticalc";
 import Monaco, { OnMount } from "@monaco-editor/react";
 import {
-  IconCalculator,
   IconCheck,
-  IconChevronCompactDown,
   IconChevronDown,
   IconEdit,
   IconX,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { err } from "@tsly/core";
-import { useWaitFor } from "@tsly/hooks";
 import { initVimMode } from "monaco-vim";
-import { run } from "node:test";
-import { useEffect, useRef, useState } from "react";
-import { Shell } from "src/components/shell";
-import { User } from "src/core/userStore";
-import { ticalc, tifiles } from "ticalc-usb";
-import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { tifiles } from "ticalc-usb";
 
 function ProgramTitleControls() {
   const {
@@ -79,39 +68,74 @@ function ProgramTitleControls() {
   );
 }
 
-export function Editor(props: { user: User }) {
+export function ProgramEditor(props: { id: string }) {
   const [name, setName] = useState("PROGRAM");
   const [blockly, setBlockly] = useState("");
-  const [queued, setQueued] = useState<any>(undefined);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["program", props.id],
+    queryFn: () =>
+      api.query(["program:get", { program_id: parseInt(props.id) }]),
+  });
+
+  useEffect(() => {
+    if (!data) return;
+
+    setBlockly(data.blockly ?? "");
+    setName(data.name);
+  }, [data]);
 
   const handleEditorDidMount: OnMount = (editor, _monaco) => {
     initVimMode(editor, null);
   };
 
-  const { calc, choose } = useTiCalc();
+  const { calc, choose, queueFile } = useTiCalc();
 
   async function run() {
-    await choose();
+    if (!data) return;
+    const { public: isPublic, id } = data;
+    await api.mutation([
+      "program:update",
+      { id, public: isPublic, name, blockly },
+    ]);
 
-    const { id } = await api.mutation(["program:create", { blockly, name }]);
+    await choose();
     const compiled = await api.query(["program:compile", { program_id: id }]);
 
     if (compiled.status == "Err") return err(compiled.reason);
 
     const file = tifiles.parseFile(new Uint8Array(compiled.buffer));
-    setQueued(file);
+
+    await new Promise<void>((resolve) => {
+      queueFile(file, resolve);
+    });
   }
 
-  useEffect(() => {
-    if (!calc || !queued) return;
+  async function save() {
+    if (!data) return;
+    const { public: isPublic, id } = data;
 
-    if (!tifiles.isValid(queued)) return console.error("ivnalid file");
+    await api
+      .mutation(["program:update", { id, public: isPublic, name, blockly }])
+      .then(() => {
+        toast.success(name + " saved");
+      });
+  }
 
-    calc.sendFile(queued).then(() => setQueued(false));
-  }, [queued, calc]);
-
-  return (
-    <Shell>
+  return isLoading ? (
+    <div
+      style={{
+        width: "100%",
+        height: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Spinner />
+    </div>
+  ) : (
+    <>
       <Stack w={"100%"} h={"65px"} gap={0}>
         <Stack
           direction={"row"}
@@ -139,17 +163,18 @@ export function Editor(props: { user: User }) {
           </HStack>
 
           <HStack>
-            <Button onClick={() => run()}>Run</Button>
-            <Menu closeOnSelect={false}>
-              <MenuButton as={Button} rightIcon={<IconChevronDown size={16} />}>
-                More
-              </MenuButton>
-              <MenuList>
-                <MenuOptionGroup type="checkbox" title="Editor Settings">
-                  <MenuItemOption value="vim">Vim Mode</MenuItemOption>
-                </MenuOptionGroup>
-              </MenuList>
-            </Menu>
+            <Button
+              onClick={() =>
+                toast.promise(run(), {
+                  loading: "Sending to calculator...",
+                  success: () => "Sent to " + (calc?.name ?? "Calculator"),
+                  error: (e) => "Interrupted. Please try again",
+                })
+              }
+            >
+              Run
+            </Button>
+            <Button onClick={() => save()}>Save</Button>
           </HStack>
         </Stack>
 
@@ -169,6 +194,6 @@ export function Editor(props: { user: User }) {
         defaultLanguage="ruby"
       />
       <div id="statusbar" />
-    </Shell>
+    </>
   );
 }

@@ -65,6 +65,16 @@ pub fn get_router() -> RouterBuilder<AuthedCtx, ()> {
                 Ok(doc)
             })
         })
+        .query("list", |t| {
+            t(|ctx, _: ()| async move {
+                get_prisma_client()
+                    .program()
+                    .find_many(vec![program::user_id::equals(ctx.claims.user_id)])
+                    .exec()
+                    .await
+                    .or_server_error("failed to query programs")
+            })
+        })
         .mutation("create", |t| {
             t(|ctx, params: CreateProgramParams| async move {
                 get_prisma_client()
@@ -107,6 +117,28 @@ pub fn get_router() -> RouterBuilder<AuthedCtx, ()> {
                     .exec()
                     .await
                     .or_server_error("failed to update record")
+            })
+        })
+        .mutation("delete", |t| {
+            t(|ctx, id: i32| async move {
+                let delete_count = get_prisma_client()
+                    .program()
+                    .delete_many(vec![and![
+                        program::id::equals(id),
+                        program::user_id::equals(ctx.claims.user_id)
+                    ]])
+                    .exec()
+                    .await
+                    .or_server_error("failed to delete record")?;
+
+                return if delete_count == 0 {
+                    Err(rspc::Error::new(
+                        rspc::ErrorCode::NotFound,
+                        "not found".into(),
+                    ))
+                } else {
+                    Ok(())
+                };
             })
         })
         .query("compile", |t| {

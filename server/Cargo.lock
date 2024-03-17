@@ -4688,9 +4688,9 @@ dependencies = [
 
 [[package]]
 name = "tibrs"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f362357b7db7ab7fd1b8daa9b8d94c2cde632e6da33230548d87c575a1921ea"
+checksum = "7330af4aa26938972539bc0689cea99ca93ba32da5e26da20f04ae34d92bb820"
 dependencies = [
  "anyhow",
  "clap",

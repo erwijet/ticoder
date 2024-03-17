@@ -5,9 +5,11 @@ export type Procedures = {
         { key: "auth", input: never, result: GetAuthResp } | 
         { key: "me", input: never, result: GetMeResp } | 
         { key: "program:compile", input: CompileProgramParams, result: CompileProgramResp } | 
-        { key: "program:get", input: GetProgramParams, result: Program },
+        { key: "program:get", input: GetProgramParams, result: Program } | 
+        { key: "program:list", input: never, result: Program[] },
     mutations: 
         { key: "program:create", input: CreateProgramParams, result: Program } | 
+        { key: "program:delete", input: number, result: null } | 
         { key: "program:update", input: UpdateProgramParams, result: Program },
     subscriptions: never
 };

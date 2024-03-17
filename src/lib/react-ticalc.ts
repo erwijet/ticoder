@@ -1,41 +1,67 @@
 import { err } from "@tsly/core";
-import { useEffect, useRef, useState } from "react";
-import { ticalc } from "ticalc-usb";
+import { useEffect } from "react";
+import { Calculator, ticalc, tifiles } from "ticalc-usb";
+import { create } from "zustand";
 
-function useTiUsbHandlers(handlers: {
-  onConnect?: (calc: any) => any;
-  onDisconnect?: (calc: any) => any;
-}) {
-  const ref = useRef(false);
+type TiCalcStore = {
+  calc?: Calculator;
+  sendQueue: { file: tifiles.File; didSend?: () => unknown }[];
 
-  useEffect(() => {
-    if (!!ref.current) return;
+  queueFile(file: tifiles.File, didSend?: () => unknown): void;
+  popFile(): { file: tifiles.File; didSend?: () => unknown } | undefined;
+};
 
-    console.log("MARK");
-    ticalc.init({ supportLevel: "none" });
+const ticalcStore = create<TiCalcStore>((set, get) => {
+  return {
+    sendQueue: [],
+    onConnectHandlers: [],
+    onDisconnectHandlers: [],
 
-    if (handlers.onDisconnect)
-      ticalc.addEventListener("disconnect", handlers.onDisconnect);
+    queueFile(file, didSend) {
+      set((prev) => ({
+        ...prev,
+        sendQueue: [...prev.sendQueue, { file, didSend }],
+      }));
+    },
 
-    if (handlers.onConnect)
-      ticalc.addEventListener("connect", handlers.onConnect);
+    popFile() {
+      const {
+        sendQueue: [head, ...tail],
+      } = get();
+      set((prev) => ({ ...prev, sendQueue: tail }));
 
-    ref.current = true;
-  }, []);
-}
+      return head;
+    },
+  };
+});
+
+ticalc.addEventListener("connect", async (calc) => {
+  if (!(await calc.isReady())) return err("failed to init calculator");
+  ticalcStore.setState((prev) => ({ ...prev, calc }));
+});
+
+ticalc.addEventListener("disconnect", async (calc) => {
+  if (ticalcStore.getState().calc == calc)
+    ticalcStore.setState((prev) => ({ ...prev, calc: undefined }));
+});
+
+ticalc.init({ supportLevel: "none" });
 
 export function useTiCalc() {
-  const [calc, setCalc] = useState<any>(undefined);
+  const { queueFile, popFile, sendQueue, calc } = ticalcStore();
 
-  useTiUsbHandlers({
-    async onConnect(calc) {
-      if (await !calc.isReady()) return err("failed to init calculator");
-      setCalc(calc);
-    },
-    onDisconnect(disconnected) {
-      if (calc == disconnected) setCalc(undefined);
-    },
-  });
+  useEffect(() => {
+    if (!calc || sendQueue.length == 0) return;
 
-  return { calc, choose: () => ticalc.choose() };
+    const { file, didSend } = popFile()!;
+
+    if (!tifiles.isValid(file)) return console.error("invalid file");
+    calc.sendFile(file).then(() => didSend?.());
+  }, [calc, sendQueue]);
+
+  return {
+    calc,
+    choose: () => ticalc.choose(),
+    queueFile,
+  };
 }

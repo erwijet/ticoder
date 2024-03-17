@@ -6,7 +6,8 @@ import { Login } from "src/pages/login";
 import { Token } from "src/pages/token";
 import { User, useUserStore } from "src/core/userStore";
 import { Logout } from "src/pages/logout";
-import { Editor } from "src/pages/editor";
+import { maybe } from "@tsly/maybe";
+import { ProgramPage } from "src/pages/programs/program-page";
 
 export type RouterPath =
   | {
@@ -29,32 +30,33 @@ export const paths = {
     path: "/",
     protected: true,
     component: App,
-    name: "Home"
+    name: "Home",
   },
-  editor: {
-    get: () => "/editor",
-    path: "/editor",
+  programs: {
+    get: (id?: number) =>
+      "/program" + (maybe(id?.toString())?.take((it) => "/" + it) ?? "/list"),
+    path: "/program/:id",
     protected: true,
-    component: Editor,
-    name: "Editor"
+    component: ProgramPage,
+    name: "Programs",
   },
   login: {
     get: () => "/login",
     path: "/login",
     component: Login,
-    name: "-"
+    name: "-",
   },
   logout: {
     get: () => "/logout",
     path: "/logout",
     component: Logout,
-    name: "-"
+    name: "-",
   },
   token: {
     get: () => "/token",
     path: "/token",
     component: Token,
-    name: "-"
+    name: "-",
   },
 } as const satisfies Record<string, RouterPath>;
 
@@ -91,8 +93,7 @@ export function useRouter() {
     obj(paths).entries.map(([k, v]) => [
       k,
       {
-        nav: (...args: any[]) =>
-          nav(v.get(...(args as Parameters<(typeof v)["get"]>))),
+        nav: (...args: any[]) => nav(v.get(...(args as [any]))),
       },
     ])
   ) as {

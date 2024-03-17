@@ -17,7 +17,7 @@ import { err } from "@tsly/core";
 import { Link, useLocation } from "react-router-dom";
 import { User, useUserStore } from "src/core/userStore";
 import Brand from "../public/brand.svg?react";
-import { RouterPath, paths } from "src/core/router";
+import { RouterPath, paths, router, useRouter } from "src/core/router";
 import { IconCode, IconHome } from "@tabler/icons-react";
 
 // const items = [paths.root, paths.editor] satisfies RouterPath[];
@@ -82,12 +82,12 @@ export const Navbar = () => {
             <Button
               colorScheme="blackAlpha"
               color={"white"}
-              variant={pathname == "/editor" ? "solid" : "ghost"}
+              variant={pathname.startsWith("/program") ? "solid" : "ghost"}
               as={Link}
-              to={"/editor"}
+              to={paths.programs.get()}
               leftIcon={<IconCode size={16} />}
             >
-              Editor
+              Programs
             </Button>
           </Stack>
         </Stack>

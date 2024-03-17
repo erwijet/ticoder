@@ -71,6 +71,9 @@ dependencies:
   ticalc-usb:
     specifier: ^1.1.2
     version: 1.1.2
+  ts-pattern:
+    specifier: ^5.0.8
+    version: 5.0.8
   usb:
     specifier: ^2.12.1
     version: 2.12.1
@@ -3144,6 +3147,10 @@ packages:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
     hasBin: true
     dev: true
+
+  /ts-pattern@5.0.8:
+    resolution: {integrity: sha512-aafbuAQOTEeWmA7wtcL94w6I89EgLD7F+IlWkr596wYxeb0oveWDO5dQpv85YP0CGbxXT/qXBIeV6IYLcoZ2uA==}
+    dev: false
 
   /tsconfck@3.0.2:
     resolution: {integrity: sha512-6lWtFjwuhS3XI4HsX4Zg0izOI3FU/AI9EGVlPEUMDIhvLPMD4wkiof0WCoDgW7qY+Dy198g4d9miAqUHWHFH6Q==}
