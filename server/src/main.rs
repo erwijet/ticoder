@@ -1,35 +1,24 @@
 mod db;
 mod interop;
 mod macros;
+mod notary;
 #[allow(warnings, unused)]
 mod prisma;
 mod router;
-mod util;
-mod notary;
 mod routes;
-
-use std::{borrow::Borrow, collections::HashMap, ops::Deref, os::macos::raw::stat, sync::Arc};
+mod util;
 
 use axum::{
-    body::{Body, Bytes},
-    extract::Path,
     response::{IntoResponse, Response},
-    routing::{get, post, MethodRouter},
-    Json,
+    routing::get,
 };
 
 use db::init_prisma_client;
 use dotenv::dotenv;
 use interop::IntoAxumRouter;
 
-use http::{Request, StatusCode};
+use http::StatusCode;
 use router::get_router;
-use rspc::{
-    internal::jsonrpc::{self, JsonRPCError},
-    ExecError,
-};
-use serde_json::json;
-use tap::Pipe;
 use tower_http::cors::{Any, CorsLayer};
 use util::get_project_root;
 

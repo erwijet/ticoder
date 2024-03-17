@@ -1,16 +1,14 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use prisma_client_rust::{and, or};
 use rspc::{Router, RouterBuilder};
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use tap::{Pipe, Tap};
 
 use crate::{
     db::get_prisma_client,
     maybe,
     prisma::program,
     router::{AuthedCtx, TicoderRouterError},
+    util::expect,
 };
 
 #[derive(Deserialize, Type)]
@@ -131,14 +129,8 @@ pub fn get_router() -> RouterBuilder<AuthedCtx, ()> {
                     .await
                     .or_server_error("failed to delete record")?;
 
-                return if delete_count == 0 {
-                    Err(rspc::Error::new(
-                        rspc::ErrorCode::NotFound,
-                        "not found".into(),
-                    ))
-                } else {
-                    Ok(())
-                };
+                expect(delete_count == 0).or_not_found()?;
+                Ok(())
             })
         })
         .query("compile", |t| {

@@ -1,7 +1,6 @@
 use serde::Deserialize;
-use tap::{Pipe, Tap};
+use tap::{Pipe};
 
-use crate::maybe;
 use crate::router::TicoderRouterError;
 
 #[derive(Deserialize)]
@@ -58,9 +57,5 @@ pub async fn inspect_token<S: Into<String>>(token: S) -> Result<NotaryInspectRes
         .await
         .or_server_error("error reading from notary server")?
         .pipe(|it| serde_json::from_slice::<NotaryInspectResp>(&it).unwrap())
-        .pipe(|it| Ok(it))
-}
-
-pub async fn is_token_valid<S: Into<String>>(token: S) -> bool {
-    maybe!(inspect_token(token).await, let _err in { return false }).valid
+        .pipe(Ok)
 }
