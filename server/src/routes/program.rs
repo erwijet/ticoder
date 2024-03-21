@@ -4,10 +4,7 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 
 use crate::{
-    db::get_prisma_client,
-    maybe,
-    prisma::program,
-    router::{AuthedCtx, TicoderRouterError},
+    db::get_prisma_client, maybe, prisma::program, router::AuthedCtx, routes::TicoderRouterError,
     util::expect,
 };
 

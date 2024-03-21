@@ -1,50 +1,19 @@
 use dotenv::dotenv;
 use http::HeaderMap;
 use rspc::Router;
-use serde::Serialize;
-use specta::Type;
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 use tap::Pipe;
 
-use crate::{notary, routes};
+use crate::{
+    notary,
+    routes::{self, TicoderRouterError},
+};
 
-pub trait TicoderRouterError<T> {
-    fn or_bad_request<S: Into<String>>(self, msg: S) -> Result<T, rspc::Error>;
-    fn or_server_error<S: Into<String>>(self, msg: S) -> Result<T, rspc::Error>;
-    fn or_not_found(self) -> Result<T, rspc::Error>;
-}
-
-impl<T, E> TicoderRouterError<T> for Result<T, E> {
-    fn or_bad_request<S: Into<String>>(self, msg: S) -> Result<T, rspc::Error> {
-        self.map_err(|_| rspc::Error::new(rspc::ErrorCode::BadRequest, msg.into()))
-    }
-
-    fn or_server_error<S: Into<String>>(self, msg: S) -> Result<T, rspc::Error> {
-        self.map_err(|_| rspc::Error::new(rspc::ErrorCode::InternalServerError, msg.into()))
-    }
-
-    fn or_not_found(self) -> Result<T, rspc::Error> {
-        self.map_err(|_| rspc::Error::new(rspc::ErrorCode::NotFound, "not found".into()))
-    }
-}
-
-impl<T> TicoderRouterError<T> for Option<T> {
-    fn or_bad_request<S: Into<String>>(self, msg: S) -> Result<T, rspc::Error> {
-        self.ok_or(rspc::Error::new(rspc::ErrorCode::BadRequest, msg.into()))
-    }
-
-    fn or_server_error<S: Into<String>>(self, msg: S) -> Result<T, rspc::Error> {
-        self.ok_or(rspc::Error::new(
-            rspc::ErrorCode::InternalServerError,
-            msg.into(),
-        ))
-    }
-
-    fn or_not_found(self) -> Result<T, rspc::Error> {
-        self.ok_or(rspc::Error::new(
-            rspc::ErrorCode::NotFound,
-            "not found".into(),
-        ))
+pub struct UnauthedCtx(pub HeaderMap);
+impl Deref for UnauthedCtx {
+    type Target = HeaderMap;
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -53,31 +22,13 @@ pub struct AuthedCtx {
     pub claims: notary::NotaryClaims,
 }
 
-#[derive(Debug, Serialize, Type)]
-struct AuthLoginParams {}
+//
 
-#[derive(Debug, Serialize, Type)]
-struct GetAuthResp {
-    url: String,
-}
-
-#[derive(Debug, Serialize, Type)]
-struct GetMeResp {
-    name: String,
-}
-
-pub fn get_router() -> Arc<Router<HeaderMap>> {
+pub fn build_router() -> Arc<Router<UnauthedCtx>> {
     dotenv().ok();
 
-    rspc::Router::<HeaderMap>::new()
-        .query("auth", |t| {
-            t(|_ctx, _: ()| async move {
-                notary::get_oauth_url()
-                    .await
-                    .or_server_error("failed to fetch OAuth2 url from notary server")?
-                    .pipe(|payload| Ok(GetAuthResp { url: payload.url }))
-            })
-        })
+    rspc::Router::<UnauthedCtx>::new()
+        .merge("auth:", routes::auth::get_router())
         .middleware(|builder| {
             fn no_auth() -> rspc::Error {
                 rspc::Error::new(rspc::ErrorCode::Unauthorized, "unauthorized".into())
@@ -100,13 +51,6 @@ pub fn get_router() -> Arc<Router<HeaderMap>> {
                     .ok_or(no_auth())?;
 
                 Ok(prev.with_ctx(AuthedCtx { headers, claims }))
-            })
-        })
-        .query("me", |t| {
-            t(|ctx, _: ()| async move {
-                Ok(GetMeResp {
-                    name: ctx.claims.fullname,
-                })
             })
         })
         .merge("program:", routes::program::get_router())

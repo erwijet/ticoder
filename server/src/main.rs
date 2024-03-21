@@ -18,7 +18,7 @@ use dotenv::dotenv;
 use interop::IntoAxumRouter;
 
 use http::StatusCode;
-use router::get_router;
+use router::build_router;
 use tower_http::cors::{Any, CorsLayer};
 use util::get_project_root;
 
@@ -38,7 +38,7 @@ async fn main() {
     dotenv().ok();
 
     init_prisma_client().await;
-    get_router()
+    build_router()
         .export_ts(format!(
             "{}/../src/codegen/api.d.ts",
             get_project_root().unwrap()
@@ -47,7 +47,7 @@ async fn main() {
 
     let app = axum::Router::new()
         .route("/", get(|| async { "ok" }))
-        .merge(get_router().into_axum_router("/rspc"))
+        .merge(build_router().into_axum_router("/rspc"))
         .layer(CorsLayer::new().allow_origin(Any).allow_headers(Any));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();

@@ -1,7 +1,7 @@
 use serde::Deserialize;
-use tap::{Pipe};
+use tap::Pipe;
 
-use crate::router::TicoderRouterError;
+use crate::routes::TicoderRouterError;
 
 #[derive(Deserialize)]
 pub struct NotaryAuthResp {
@@ -11,9 +11,10 @@ pub struct NotaryAuthResp {
 pub async fn get_oauth_url() -> Result<NotaryAuthResp, rspc::Error> {
     let notary_server = std::env::var("NOTARY_HOST").expect("missing env var 'NOTARY_HOST'");
     let notary_svc_key = std::env::var("NOTARY_KEY").expect("missing env var 'NOTARY_KEY'");
+    let notary_target = std::env::var("NOTARY_TARGET").expect("missing env var 'NOTARY_TARGET'");
 
     reqwest::get(format!(
-        "{}/authorize/ticoder?via=google&key={}&callback=http://localhost:3000/token",
+        "{}/authorize/ticoder?via=google&key={}&callback={notary_target}",
         notary_server, notary_svc_key
     ))
     .await

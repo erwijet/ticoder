@@ -15,7 +15,7 @@ use rspc::{
 };
 use serde_json::Value;
 
-use crate::{maybe, status};
+use crate::{maybe, router::UnauthedCtx, status};
 use tap::Pipe;
 
 pub trait ExecErrorIntoResponse {
@@ -44,13 +44,13 @@ pub trait IntoAxumRouter<S: Clone + Send + Sync + 'static = ()> {
     fn into_axum_router(self, path: &str) -> axum::Router<S>;
 }
 
-impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for rspc::Router<HeaderMap> {
+impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for rspc::Router<UnauthedCtx> {
     fn into_axum_router(self, path: &str) -> axum::Router<S> {
         self.arced().into_axum_router(path)
     }
 }
 
-impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for Arc<rspc::Router<HeaderMap>> {
+impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for Arc<rspc::Router<UnauthedCtx>> {
     fn into_axum_router(self, path_base: &str) -> axum::Router<S> {
         let query_router = self.clone();
         let mutation_router = self.clone();
@@ -85,7 +85,12 @@ impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for Arc<rspc::Router<He
                             .map(|s| serde_json::from_str(s).unwrap());
 
                         let exec_result = query_router
-                            .exec(headers, rspc::ExecKind::Query, id.clone(), input)
+                            .exec(
+                                UnauthedCtx(headers),
+                                rspc::ExecKind::Query,
+                                id.clone(),
+                                input,
+                            )
                             .await;
 
                         maybe!(exec_result, let err in {
@@ -110,7 +115,7 @@ impl<S: Clone + Send + Sync + 'static> IntoAxumRouter<S> for Arc<rspc::Router<He
 
                         let exec_result = mutation_router
                             .exec(
-                                headers,
+                                UnauthedCtx(headers),
                                 rspc::ExecKind::Mutation,
                                 id.clone(),
                                 Some(maybe!(serde_json::from_str(&body), let err in {
