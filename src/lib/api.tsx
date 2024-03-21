@@ -4,9 +4,10 @@ import { toast } from "sonner";
 import { Toast } from "@chakra-ui/react";
 import { maybe } from "@tsly/maybe";
 import { useUserStore } from "src/core/userStore";
+import { err } from "@tsly/core";
 
 export const api = createClient<Procedures>({
-  transport: new FetchTransport("http://localhost:8080/rspc", (input, init) =>
+  transport: new FetchTransport(import.meta.env.VITE_TICODER_API ?? err("expected VITE_TICODER_API env var"), (input, init) =>
     fetch(input, {
       ...init,
       headers: {

@@ -2,6 +2,7 @@
 /// <reference types="vite-plugin-svgr/client" />
 
 interface ImportMetaEnv {
+    readonly VITE_TICODER_API?: string;
     readonly VITE_GIT_FINGERPRINT?: string;
 }
 
