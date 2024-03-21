@@ -9,24 +9,17 @@ import {
   HStack,
   IconButton,
   Input,
-  Menu,
-  MenuButton,
-  MenuItemOption,
-  MenuList,
-  MenuOptionGroup,
   Spinner,
   Stack,
-  Toast,
-  useEditableControls,
+  useEditableControls
 } from "@chakra-ui/react";
 import { api } from "@lib/api";
 import { useTiCalc } from "@lib/react-ticalc";
 import Monaco, { OnMount } from "@monaco-editor/react";
 import {
   IconCheck,
-  IconChevronDown,
   IconEdit,
-  IconX,
+  IconX
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { err } from "@tsly/core";

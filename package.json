@@ -21,7 +21,7 @@
     "@tsly/core": "^1.1.0",
     "@tsly/hooks": "^1.1.0",
     "@tsly/maybe": "^1.2.0",
-    "@tsly/obj": "^1.0.0",
+    "@tsly/obj": "^1.1.0",
     "@types/react-dom": "^18.2.19",
     "framer-motion": "^11.0.3",
     "jwt-decode": "^4.0.0",

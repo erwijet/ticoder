@@ -1,13 +1,11 @@
-import { Button, useStatStyles } from "@chakra-ui/react";
+import { Button } from "@chakra-ui/react";
 import { api } from "@lib/api";
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { maybe } from "@tsly/maybe";
-import { useUserStore } from "src/core/userStore";
+import { useEffect, useState } from "react";
 
 export function Login() {
   const [shouldAuth, setShouldAuth] = useState(false);
-  const { setToken } = useUserStore.getState();
 
   function auth() {
     setShouldAuth(true);
@@ -17,7 +15,7 @@ export function Login() {
     queryKey: [],
     staleTime: 0,
     enabled: shouldAuth,
-    queryFn: () => api.query(["auth"]),
+    queryFn: () => api.query(["auth:get_oauth2_url"]),
   });
 
   useEffect(() => {
