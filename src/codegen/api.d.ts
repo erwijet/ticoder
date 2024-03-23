@@ -13,11 +13,7 @@ export type Procedures = {
     subscriptions: never
 };
 
-export type GetOauth2UrlParams = { url: string }
-
-export type Program = { id: number; userId: string; name: string; createdAt: string; blockly: string | null; public: boolean }
-
-export type CompileProgramResp = { status: "Ok"; buffer: number[] } | { status: "Err"; reason: string }
+export type UpdateProgramParams = { id: number; name: string; blockly: string; public: boolean }
 
 export type GetProgramParams = { program_id: number }
 
@@ -25,4 +21,8 @@ export type CompileProgramParams = { program_id: number }
 
 export type CreateProgramParams = { name: string; blockly: string }
 
-export type UpdateProgramParams = { id: number; name: string; blockly: string; public: boolean }
+export type Program = { id: number; userId: string; name: string; createdAt: string; blockly: string | null; public: boolean }
+
+export type GetOauth2UrlParams = { url: string }
+
+export type CompileProgramResp = { status: "Ok"; buffer: number[] } | { status: "Err"; reason: string }
