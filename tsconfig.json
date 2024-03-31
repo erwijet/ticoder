@@ -14,9 +14,10 @@
     "jsx": "react-jsx",
     "paths": {
       "@codegen/*": ["./src/codegen/*"],
-      "@lib/*": ["./src/lib/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@stdlib/*": ["./stdlib/*"],
       "src/*": ["./src/*"]
     }
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts", "stdlib"]
 }

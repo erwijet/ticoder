@@ -1,5 +1,4 @@
 mod db;
-mod interop;
 mod macros;
 mod notary;
 #[allow(warnings, unused)]
@@ -8,30 +7,14 @@ mod router;
 mod routes;
 mod util;
 
-use axum::{
-    response::{IntoResponse, Response},
-    routing::get,
-};
+use axum::routing::get;
 
 use db::init_prisma_client;
 use dotenv::dotenv;
-use interop::IntoAxumRouter;
 
-use http::{request::Parts, HeaderMap, StatusCode};
 use router::{build_router, UnauthedCtx};
 use tower_http::cors::{Any, CorsLayer};
 use util::get_project_root;
-
-fn status<S: ToString>(code: u16, msg: Option<S>) -> Response {
-    let msg: String = match msg {
-        Some(msg) => msg.to_string(),
-        None => "Error".to_owned(),
-    };
-
-    let code = StatusCode::from_u16(code).unwrap();
-
-    (code, msg).into_response()
-}
 
 #[tokio::main]
 async fn main() {

@@ -1,0 +1,331 @@
+
+define {
+    op_add = 0
+    op_sub = 1
+    op_mul = 2
+    op_div = 3
+    op_nop = 4
+}
+
+let n_max : Num
+let valid : Num
+let op1 : Num
+let op2 : Num
+let op3 : Num
+let op4 : Num
+let op : Num
+
+let res : Num
+let cnt_num_set : Num
+let tmp : Num
+
+Menu("  Math24 Menu   ","Create set",AD,"Solve set",AE)
+
+menu "Math24 Menu" {
+    "Create set" -> {
+        jump :create_set
+    },
+    "Solve set" -> {
+        jump :solve_set
+    }
+}
+
+@create_set {
+    let op_set : vec(4)
+    let num_set : vec(3)
+
+    set cnt_num_set to 0
+    set op to op_nop
+
+    ClrHome
+
+    Input "num cap: ",n_max
+    ClrHome
+    Disp "loading…"
+
+    Output(4,1,"  created      ")
+    Output(5,1,"     & tested  ")
+    Output(8,10,"sets")
+
+    while True {
+        let valid be True
+
+        for i in 1 to 4 {
+            if abs(num_set(1,I))>n_max or fPart(num_set(i,I))!=0 {
+                set valid to False
+            }
+        }
+
+        if valid == True {
+            jump @create_exit
+        }
+
+        for i in 1 to 3 {
+            set op_set[i] to randInt(1, 3)
+        }
+
+        while op_set(1) == op_set(1, 2) == op_set(1, 3) {
+            for i in 1 to 3 {
+                set op_set[i] to randInt(1, 3)
+            }
+        }
+
+        for i in 1 to 4 {
+            set num_set[i] to randInt(1, round(n_max / 2))
+        }
+
+        set res to 24
+
+        for i in 1 to 3 {
+            let arg be num_set(4 - i)
+            set op to op_set(4 - i)
+
+            if op == op_add {
+                set res to arg + res
+            }
+
+            if op == op_sub {
+                set res to arg - res
+            }
+
+            if op == op_mul {
+                set res to arg * res
+            }
+
+            if op == op_div {
+                set res to arg / res
+            }
+        }
+
+        set num_set(1) to res
+        cnt_num_set++
+
+        Output(8,3,cnt_num_set)
+    }
+}
+
+
+
+Lbl AD
+
+DelVar [B]
+DelVar [C]
+
+{1,4}->dim([C])
+{1,3}->dim([B])
+
+0->H
+4->F
+
+ClrHome
+
+Input "num cap: ",A
+Fill(A+1,[C])
+
+ClrHome
+Disp "loading…"
+Output(4,1,"  created      ")
+Output(5,1,"     & tested  ")
+Output(8,10,"sets")
+
+While 1
+1->B
+For(I,1,4)
+If abs([C](1,I))>A or fPart([C](1,I))!=0
+0->B
+End
+
+If B=1
+Goto AA
+
+
+For(I,1,3)
+randInt(1,3)->[B](1,I)
+End
+
+While [B](1,1)=[B](1,2)=[B](1,3)
+For(I,1,3)
+randInt(1,3)->[B](1,I)
+End
+End
+
+For(I,1,4)
+randInt(1,round(A/2))->[C](1,I)
+End
+
+24->G
+For(I,1,3)
+[B](1,4-I)->F
+
+If F=0
+[C](1,4-I)+G->G
+If F=1
+[C](1,4-I)-G->G
+If F=2
+[C](1,4-I)*G->G
+If F=3
+[C](1,4-I)/G->G
+End
+
+G->[C](1,1)
+H+1->H
+
+Output(8,3,H)
+End
+
+Lbl AA
+
+ClrHome
+Disp [C]
+DelVar [B]
+getKey
+Repeat Ans
+getKey
+End
+Goto AF
+
+Lbl AE
+DelVar [D]
+DelVar [B]
+DelVar [C]
+
+{24,4}->dim([D])
+{1,4}->dim([B])
+{1,4}->dim([C])
+
+ClrHome
+Input "1st num: ",L
+L->[C](1,1)
+Input "2nd num: ",L
+L->[C](1,2)
+Input "3rd num: ",L
+L->[C](1,3)
+Input "4th num: ",L
+L->[C](1,4)
+
+ClrHome
+Disp "loading…"
+Disp ""
+Output(8,1,"find sets:   /24")
+
+ClrList L1
+
+For(I,1,4)
+[C](1,I)->L1(1+dim(L1))
+End
+
+For(X,1,24)
+For(I,1,4)
+L1(I)->[D](X,I)
+End
+abs(4-8fPart(X/8)-3not(fPart(X/4->Y
+L1(Ans+1->Z
+L1(Y->L1(Y+1
+Z->L1(Y
+Output(8,12,X)
+End
+
+Output(8,1,"guess      /1536")
+
+0->H
+
+For(I,1,24)
+For(J,1,4)
+For(K,1,4)
+For(N,1,4)
+H+1->H
+Output(8,8,H)
+
+If J=1
+[D](I,1)+[D](I,2)->L
+If J=2
+[D](I,1)-[D](I,2)->L
+If J=3
+[D](I,1)*[D](I,2)->L
+If J=4
+[D](I,1)/[D](I,2)->L
+
+If K=1
+L+[D](I,3)->L
+If K=2
+L-[D](I,3)->L
+If K=3
+L*[D](I,3)->L
+If K=4
+L/[D](I,3)->L
+
+If N=1
+L+[D](I,4)->L
+If N=2
+L-[D](I,4)->L
+If N=3
+L*[D](I,4)->L
+If N=4
+L/[D](I,4)->L
+
+If L=24
+Then
+For(P,1,4)
+[D](I,P)->[C](1,P)
+End
+
+J->[B](1,1)
+K->[B](1,2)
+N->[B](1,3)
+Goto AB
+End
+End
+End
+End
+End
+Goto AC
+
+Lbl AB
+ClrHome
+Output(1,2,[C](1,1))
+Output(3,2,[C](1,2))
+Output(5,2,[C](1,3))
+Output(7,2,[C](1,4))
+
+For(I,1,3)
+If [B](1,I)=1
+"+ (ADD)"->Str1
+If [B](1,I)=2
+"- (SUB)"->Str1
+If [B](1,I)=3
+"* (MUL)"->Str1
+If [B](1,I)=4
+"/ (DIV)"->Str1
+Output(I*2,2,Str1)
+End
+
+For(I,1,6)
+Output(I,1,"|")
+End
+Output(7,1,"↓")
+Output(8,1,"             =24")
+
+getKey
+Repeat Ans
+getKey
+End
+Goto AF
+
+Lbl AC
+Disp "Yikes!!!"
+Disp "Could not solve :("
+Disp "Check input?"
+
+getKey
+Repeat Ans
+getKey
+End
+Goto AF
+
+Lbl AF
+ClrHome
+DelVar [C]
+DelVar [B]
+DelVar [D]
+ClrList L1
+"@erwijet & M.W.

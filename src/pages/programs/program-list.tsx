@@ -23,11 +23,11 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import { Program } from "@codegen/api";
-import { api } from "@lib/api";
-import { timeAgo } from "@lib/datetime";
-import { downloadBlob } from "@lib/download";
-import { useKey } from "@lib/react-keys";
-import { useTiCalc } from "@lib/react-ticalc";
+import { api } from "src/shared/api";
+import { timeAgo } from "src/shared/datetime";
+import { downloadBlob } from "src/shared/download";
+import { useKey } from "src/shared/react-keys";
+import { useTiCalc } from "src/shared/react-ticalc";
 import {
   IconCopy,
   IconFileCode,

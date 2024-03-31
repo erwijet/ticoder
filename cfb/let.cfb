@@ -1,0 +1,21 @@
+let firstname : Str
+let lastname : Str
+let my_num : Num
+
+let my_vec : Vec(10)
+let my_grid : Grid(3, 5)
+
+let bad = 10
+
+"tyler" -> firstname
+lastname := "holewinski"
+
+let fullname = "tyler holewinski"
+
+my_num := 10
+
+Disp firstname
+Disp lastname
+Disp fullname
+Disp "----"
+Disp my_num

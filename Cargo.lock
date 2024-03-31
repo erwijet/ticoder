@@ -500,6 +500,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "cf"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "itertools 0.12.1",
+ "pest",
+ "pest_derive",
+ "tap",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4582,10 +4593,6 @@ dependencies = [
  "cfg-if",
  "once_cell",
 ]
-
-[[package]]
-name = "tibalt"
-version = "0.1.0"
 
 [[package]]
 name = "tiberius"

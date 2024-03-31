@@ -13,8 +13,8 @@ import {
   Stack,
   useEditableControls
 } from "@chakra-ui/react";
-import { api } from "@lib/api";
-import { useTiCalc } from "@lib/react-ticalc";
+import { api } from "src/shared/api";
+import { useTiCalc } from "src/shared/react-ticalc";
 import Monaco, { OnMount } from "@monaco-editor/react";
 import {
   IconCheck,

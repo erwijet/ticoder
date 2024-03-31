@@ -1,5 +1,5 @@
 import { Button } from "@chakra-ui/react";
-import { api } from "@lib/api";
+import { api } from "src/shared/api";
 import { useQuery } from "@tanstack/react-query";
 import { maybe } from "@tsly/maybe";
 import { useEffect, useState } from "react";
