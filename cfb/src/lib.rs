@@ -1,7 +1,8 @@
 mod macros;
+mod resolvers;
 mod shared;
 
-use std::{collections::HashMap, fmt::format, sync::OnceLock};
+use std::{borrow::Borrow, collections::HashMap, fmt::format, path::Iter, sync::OnceLock};
 
 use anyhow::{anyhow, bail, Context, Result};
 use itertools::Itertools;
@@ -11,6 +12,7 @@ use pest::{
     Parser,
 };
 use pest_derive::Parser;
+use resolvers::{resolve_expr, resolve_ident, resolve_index, resolve_literal};
 use shared::PairUtils;
 use tap::{Pipe, Tap};
 
@@ -58,25 +60,25 @@ impl Binding {
     fn as_alloc_tib(&self) -> Result<String> {
         match &self.binding_type {
             BindingType::Num(inital) => Ok(format!(
-                "dim([list]NMEM)+1->dim([list]\n{}->[list]NMEM({}",
+                "dim([list]NMEM)+1->dim([list]NMEM\n{}->[list]NMEM({}",
                 inital.clone().unwrap_or("0".into()),
-                self.id
+                self.id + 1
             )),
             BindingType::Str(inital) => Ok(format!(
                 "\"{}->Str{}",
                 inital.clone().unwrap_or("".into()),
-                ('1'..'9')
+                ('0'..'9')
                     .nth(self.id as usize)
                     .context("no free str register")?
             )),
             BindingType::Vec(size) => Ok(format!(
-                "{{1,{size}->dim({}",
+                "{{1,{size}->dim([{}]",
                 ('A'..'J')
                     .nth(self.id as usize)
                     .context("no free matrix register")?
             )),
             BindingType::Grid(col, row) => Ok(format!(
-                "{{{col},{row}->dim({}",
+                "{{{col},{row}->dim([{}]",
                 ('A'..'J')
                     .nth(self.id as usize)
                     .context("no free matrix register")?
@@ -86,16 +88,16 @@ impl Binding {
 
     fn as_expr_tib(&self) -> Result<String> {
         match &self.binding_type {
-            BindingType::Num(inital) => Ok(format!("[list]NMEM({})", self.id)),
+            BindingType::Num(inital) => Ok(format!("[list]NMEM({})", self.id + 1)),
             BindingType::Str(inital) => Ok(format!("Str{}", self.id)),
             BindingType::Vec(size) => Ok(format!(
-                "{{1,{size}->dim({}",
+                "[{}]",
                 ('A'..'J')
                     .nth(self.id as usize)
                     .context("id out of bounds")?
             )),
             BindingType::Grid(col, row) => Ok(format!(
-                "{{{col},{row}->dim({}",
+                "[{}]",
                 ('A'..'J')
                     .nth(self.id as usize)
                     .context("id out of bounds")?
@@ -140,49 +142,6 @@ impl CfbCtx {
         self.bindings.insert(name.clone(), binding);
         &self.bindings.get(&name).unwrap()
     }
-}
-
-fn resolve_ident(ident: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
-    ctx.bindings
-        .get(ident.as_str())
-        .ok_or(anyhow!("unknown identifier: '{}'", ident.as_str()))?
-        .as_expr_tib()
-}
-
-pub fn resolve_expr(expr: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
-    pratt_parser()
-        .map_primary(|primary| match primary.as_rule() {
-            Rule::expr => resolve_expr(primary, ctx),
-            Rule::literal => {
-                let wrapped = primary.into_inner().exactly_one().unwrap();
-
-                match wrapped.as_rule() {
-                    Rule::str_literal => {
-                        Ok(wrapped.into_inner().exactly_one().unwrap().as_str().into())
-                    }
-                    Rule::inum_literal | Rule::fnum_literal => Ok(wrapped.as_str().into()),
-                    Rule::bool_literal => {
-                        Ok((if wrapped.as_str() == "true" { 1 } else { 0 }).to_string())
-                    }
-                    _ => bail!("unknown rule discriminant"),
-                }
-            }
-            Rule::ident => resolve_ident(primary, ctx),
-            Rule::index => format!(
-                "{}({})",
-                primary
-                    .find_rule(Rule::ident)
-                    .context("expected inner ident rule")?
-                    .pipe(|ident| resolve_ident(ident, ctx))?,
-                primary
-                    .find_rule(Rule::expr)
-                    .context("expected inner expr rule")?
-                    .pipe(|expr| resolve_expr(expr, ctx))?
-            )
-            .pipe(Ok),
-            _ => unreachable!(),
-        })
-        .parse(expr.into_inner())
 }
 
 pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
@@ -257,6 +216,19 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 .create_binding(ident.as_str().into(), binding_type)
                 .as_alloc_tib()?)
         }
+        Rule::assignment => {
+            let (receiver, val_expr) = token.into_inner().take(2).collect_tuple().unwrap();
+            let val = resolve_expr(val_expr, ctx)?;
+
+            Ok(format!(
+                "{val}->{}",
+                match receiver.as_rule() {
+                    Rule::ident => resolve_ident(receiver, ctx)?,
+                    Rule::index => resolve_index(receiver, ctx)?,
+                    _ => unreachable!(),
+                }
+            ))
+        }
         Rule::builtin => {
             let builtin = token
                 .into_inner()
@@ -271,6 +243,16 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                         .try_collect()?;
 
                     Ok(format!("Disp {}", args.join(",")))
+                }
+                Rule::store => {
+                    let args: Vec<String> = builtin
+                        .into_inner()
+                        .map(|each| resolve_expr(each, ctx))
+                        .try_collect()?;
+
+                    let (val, target) = args.into_iter().take(2).collect_tuple().unwrap();
+
+                    Ok(format!("{val}->{target}"))
                 }
                 _ => Ok(format!(
                     "\"[noimpl ({:?})]: {}",
@@ -294,7 +276,7 @@ pub fn run() {
     let pairs = CfbParser::parse(Rule::program, src)
         .tap(|it| {
             if let Err(err) = it {
-                eprintln!("{err:#?}");
+                eprintln!("{err:#}");
             }
         })
         .unwrap()
@@ -307,6 +289,12 @@ pub fn run() {
         bindings: HashMap::new(),
     };
 
+    // TI-Basic Init
+
+    tib += "0->dim([list]NMEM\n"; // initialize number variable list
+
+    // Body
+
     for pair in pairs {
         println!("======== NEXT PAIR ==========");
         println!("{pair:#?}");
@@ -318,6 +306,17 @@ pub fn run() {
 
         tib += &format!("{result}\n");
     }
+    // Cleanup
+
+    tib += ctx
+        .bindings
+        .values()
+        .filter(|each| !matches!(each.binding_type, BindingType::Num(_)))
+        .map(|each| format!("DelVar {}", each.as_expr_tib().unwrap()))
+        .join("")
+        .borrow();
+
+    tib += "ClrList [list]NMEM"; // drop number memory
 
     println!("=====TIBASIC=====");
     println!("{tib}");

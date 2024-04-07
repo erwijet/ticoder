@@ -6,7 +6,7 @@ COMMENT             =  _{ "//" ~ (!NEWLINE ~ ANY)* }
 program = { SOI ~ instr* ~ EOI }
 
 instr = _{ stmt | expr }
-stmt = _{ binding | assignment_binding | for_loop | while_loop | if | const | named_block | jump | builtin | assignment | increment }
+stmt = _{ binding | assignment | assignment_binding | for_loop | while_loop | if | const | named_block | jump | builtin | assignment | increment }
 expr = { primary ~ (operator ~ expr)* }
     primary = _{ literal | func_call | index | ident }
 
@@ -23,7 +23,7 @@ for_loop = { "for" ~ ident ~ "in" ~ inum_literal ~ ("to" | "downto") ~ inum_lite
 while_loop = { "while" ~ expr ~ block }
 if = { "if" ~ expr ~ block }
 inline_if = { expr ~ "if" ~ expr ~ "else" ~ expr }
-assignment = { (ident | index) ~ ":=" ~ expr }
+assignment = { (index | ident) ~ ":=" ~ expr }
 named_block = { named_block_lbl ~ block }
     named_block_lbl = @{ "@" ~ ident }
 jump = { "jump" ~ jump_lbl }
