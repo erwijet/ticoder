@@ -1,10 +1,14 @@
+mod bindings;
 mod macros;
+mod registers;
 mod resolvers;
 mod shared;
+mod ti_lifecycle;
 
 use std::{borrow::Borrow, collections::HashMap, fmt::format, path::Iter, sync::OnceLock};
 
 use anyhow::{anyhow, bail, Context, Result};
+use bindings::{Binding, BindingVariant};
 use itertools::Itertools;
 use pest::{
     iterators::Pair,
@@ -15,6 +19,7 @@ use pest_derive::Parser;
 use resolvers::{resolve_expr, resolve_ident, resolve_index, resolve_literal};
 use shared::PairUtils;
 use tap::{Pipe, Tap};
+use ti_lifecycle::TiLifecycle;
 
 #[derive(Parser)]
 #[grammar = "../grammar.peg"]
@@ -41,108 +46,42 @@ fn pratt_parser() -> &'static PrattParser<Rule> {
     })
 }
 
-#[derive(PartialEq, Debug)]
-enum BindingType {
-    Str(Option<String>),
-    Num(Option<String>),
-    Vec(String),
-    Grid(String, String),
-}
-
-#[derive(Debug)]
-struct Binding {
-    pub binding_type: BindingType,
-    pub name: String,
-    pub id: u16,
-}
-
-impl Binding {
-    fn as_alloc_tib(&self) -> Result<String> {
-        match &self.binding_type {
-            BindingType::Num(inital) => Ok(format!(
-                "dim([list]NMEM)+1->dim([list]NMEM\n{}->[list]NMEM({}",
-                inital.clone().unwrap_or("0".into()),
-                self.id + 1
-            )),
-            BindingType::Str(inital) => Ok(format!(
-                "\"{}->Str{}",
-                inital.clone().unwrap_or("".into()),
-                ('0'..'9')
-                    .nth(self.id as usize)
-                    .context("no free str register")?
-            )),
-            BindingType::Vec(size) => Ok(format!(
-                "{{1,{size}->dim([{}]",
-                ('A'..'J')
-                    .nth(self.id as usize)
-                    .context("no free matrix register")?
-            )),
-            BindingType::Grid(col, row) => Ok(format!(
-                "{{{col},{row}->dim([{}]",
-                ('A'..'J')
-                    .nth(self.id as usize)
-                    .context("no free matrix register")?
-            )),
-        }
-    }
-
-    fn as_expr_tib(&self) -> Result<String> {
-        match &self.binding_type {
-            BindingType::Num(inital) => Ok(format!("[list]NMEM({})", self.id + 1)),
-            BindingType::Str(inital) => Ok(format!("Str{}", self.id)),
-            BindingType::Vec(size) => Ok(format!(
-                "[{}]",
-                ('A'..'J')
-                    .nth(self.id as usize)
-                    .context("id out of bounds")?
-            )),
-            BindingType::Grid(col, row) => Ok(format!(
-                "[{}]",
-                ('A'..'J')
-                    .nth(self.id as usize)
-                    .context("id out of bounds")?
-            )),
-        }
-    }
-}
-
-#[derive(Debug)]
 struct CfbCtx {
     bindings: HashMap<String, Binding>,
 }
 
-impl CfbCtx {
-    fn create_binding<'a>(&'a mut self, name: String, binding_type: BindingType) -> &'a Binding {
-        let id = self.bindings.values().pipe(|values| {
-            if let BindingType::Grid(_, _) | BindingType::Vec(_) = binding_type {
-                values
-                    .filter(|binding| {
-                        matches!(
-                            binding.binding_type,
-                            BindingType::Grid(_, _) | BindingType::Vec(_)
-                        )
-                    })
-                    .count()
-            } else {
-                values
-                    .filter(|binding| {
-                        std::mem::discriminant(&binding.binding_type)
-                            == std::mem::discriminant(&binding_type)
-                    })
-                    .count()
-            }
-        }) as u16;
+// impl CfbCtx {
+//     fn create_binding<'a>(&'a mut self, name: String, binding_type: BindingType) -> &'a Binding {
+//         let id = self.bindings.values().pipe(|values| {
+//             if let BindingType::Grid(_, _) | BindingType::Vec(_) = binding_type {
+//                 values
+//                     .filter(|binding| {
+//                         matches!(
+//                             binding.binding_type,
+//                             BindingType::Grid(_, _) | BindingType::Vec(_)
+//                         )
+//                     })
+//                     .count()
+//             } else {
+//                 values
+//                     .filter(|binding| {
+//                         std::mem::discriminant(&binding.binding_type)
+//                             == std::mem::discriminant(&binding_type)
+//                     })
+//                     .count()
+//             }
+//         }) as u16;
 
-        let binding = Binding {
-            id,
-            binding_type,
-            name: name.to_owned(),
-        };
+//         let binding = Binding {
+//             id,
+//             binding_type,
+//             name: name.to_owned(),
+//         };
 
-        self.bindings.insert(name.clone(), binding);
-        &self.bindings.get(&name).unwrap()
-    }
-}
+//         self.bindings.insert(name.clone(), binding);
+//         &self.bindings.get(&name).unwrap()
+//     }
+// }
 
 pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
     match token.as_rule() {
@@ -160,10 +99,10 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 Rule::grid_type,
             ])?;
 
-            let binding_type: BindingType = match type_pair.as_rule() {
-                Rule::str_type => BindingType::Str(None),
-                Rule::num_type => BindingType::Num(None),
-                Rule::vec_type => BindingType::Vec(
+            let binding_type: BindingVariant = match type_pair.as_rule() {
+                Rule::str_type => BindingVariant::Str(None),
+                Rule::num_type => BindingVariant::Num(None),
+                Rule::vec_type => BindingVariant::Vec(
                     type_pair
                         .find_rule(Rule::inum_literal)
                         .context("expected vec_type to have inum_literal child")?
@@ -172,7 +111,7 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 ),
                 Rule::grid_type => {
                     (if let [colpair, rowpair] = &type_pair.find_rules(Rule::inum_literal)[..] {
-                        Ok(BindingType::Grid(
+                        Ok(BindingVariant::Grid(
                             colpair.as_str().into(),
                             rowpair.as_str().into(),
                         ))
@@ -183,9 +122,14 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 _ => unreachable!(),
             };
 
+            let binding = Binding::new(ident_pair.as_str().into(), binding_type, &ctx);
+            ctx.bindings.insert(ident_pair.as_str().into(), binding);
+
             Ok(ctx
-                .create_binding(ident_pair.as_str().into(), binding_type)
-                .as_alloc_tib()?)
+                .bindings
+                .get(ident_pair.as_str())
+                .unwrap()
+                .as_ti_init()?)
         }
         Rule::assignment_binding => {
             let ident = token
@@ -200,21 +144,26 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 .map_err(|_| anyhow!("literal pair should have exactly 1 child"))?;
 
             let binding_type = match literal.as_rule() {
-                Rule::str_literal => BindingType::Str(Some(
+                Rule::str_literal => BindingVariant::Str(Some(
                     literal.find_rule(Rule::raw_str).unwrap().as_str().into(),
                 )),
                 Rule::inum_literal | Rule::fnum_literal => {
-                    BindingType::Num(Some(literal.as_str().into()))
+                    BindingVariant::Num(Some(literal.as_str().into()))
                 }
-                Rule::bool_literal => BindingType::Num(Some(
+                Rule::bool_literal => BindingVariant::Num(Some(
                     (if literal.as_str() == "true" { 1 } else { 0 }).to_string(),
                 )),
                 _ => unreachable!(),
             };
 
+            let binding = Binding::new(ident.as_str().into(), binding_type, &ctx);
+            ctx.bindings.insert(ident.as_str().into(), binding);
+
             Ok(ctx
-                .create_binding(ident.as_str().into(), binding_type)
-                .as_alloc_tib()?)
+                .bindings
+                .get(ident.as_str())
+                .unwrap()
+                .as_ti_init()?)
         }
         Rule::assignment => {
             let (receiver, val_expr) = token.into_inner().take(2).collect_tuple().unwrap();
@@ -311,8 +260,8 @@ pub fn run() {
     tib += ctx
         .bindings
         .values()
-        .filter(|each| !matches!(each.binding_type, BindingType::Num(_)))
-        .map(|each| format!("DelVar {}", each.as_expr_tib().unwrap()))
+        .filter(|each| !matches!(each.variant, BindingVariant::Num(_)))
+        .map(|each| each.as_ti_drop().unwrap())
         .join("")
         .borrow();
 

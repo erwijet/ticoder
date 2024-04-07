@@ -3,7 +3,7 @@ use itertools::Itertools;
 use pest::iterators::Pair;
 use tap::Pipe;
 
-use crate::{pratt_parser, shared::PairUtils, CfbCtx, Rule};
+use crate::{pratt_parser, registers, shared::PairUtils, ti_lifecycle::TiLifecycle, CfbCtx, Rule};
 
 pub fn resolve_expr(expr: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
     pratt_parser()
@@ -21,7 +21,7 @@ pub fn resolve_ident(ident: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
     ctx.bindings
         .get(ident.as_str())
         .ok_or(anyhow!("unknown identifier: '{}'", ident.as_str()))?
-        .as_expr_tib()
+        .as_tibasic()
 }
 
 pub fn resolve_literal(pair: Pair<Rule>, _ctx: &mut CfbCtx) -> Result<String> {
