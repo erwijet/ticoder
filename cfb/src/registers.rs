@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use anyhow::Result;
 
-use crate::ti_lifecycle::TiLifecycle;
+use crate::traits::{AsTiBasic, CfbLifecycle};
 
 pub struct CfbReg(&'static str);
 
@@ -24,16 +24,18 @@ impl Display for CfbReg {
     }
 }
 
-impl TiLifecycle for CfbReg {
+impl AsTiBasic for CfbReg {
     fn as_tibasic(&self) -> Result<String> {
         Ok(self.0.into())
     }
+}
 
-    fn as_ti_init(&self) -> ::anyhow::Result<String> {
+impl CfbLifecycle for CfbReg {
+    fn init_ti(&self) -> Result<String> {
         Ok(format!("0->{}", self.as_tibasic()?))
     }
 
-    fn as_ti_drop(&self) -> ::anyhow::Result<String> {
+    fn drop_ti(&self) -> Result<String> {
         Ok(format!("DelVar {}", self.as_tibasic()?))
     }
 }

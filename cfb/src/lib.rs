@@ -1,14 +1,19 @@
 mod bindings;
+mod consts;
 mod macros;
 mod registers;
 mod resolvers;
 mod shared;
-mod ti_lifecycle;
+mod traits;
 
-use std::{borrow::Borrow, collections::HashMap, fmt::format, path::Iter, sync::OnceLock};
+use std::{
+    borrow::Borrow, collections::HashMap, convert::identity, fmt::format, path::Iter,
+    sync::OnceLock,
+};
 
 use anyhow::{anyhow, bail, Context, Result};
-use bindings::{Binding, BindingVariant};
+use bindings::{BindingVariant, CfbBinding};
+use consts::CfbConst;
 use itertools::Itertools;
 use pest::{
     iterators::Pair,
@@ -19,7 +24,7 @@ use pest_derive::Parser;
 use resolvers::{resolve_expr, resolve_ident, resolve_index, resolve_literal};
 use shared::PairUtils;
 use tap::{Pipe, Tap};
-use ti_lifecycle::TiLifecycle;
+use traits::CfbLifecycle;
 
 #[derive(Parser)]
 #[grammar = "../grammar.peg"]
@@ -46,8 +51,9 @@ fn pratt_parser() -> &'static PrattParser<Rule> {
     })
 }
 
-struct CfbCtx {
-    bindings: HashMap<String, Binding>,
+pub struct CfbCtx {
+    pub bindings: HashMap<String, CfbBinding>,
+    pub consts: HashMap<String, CfbConst>,
 }
 
 // impl CfbCtx {
@@ -85,6 +91,7 @@ struct CfbCtx {
 
 pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
     match token.as_rule() {
+        Rule::expr => resolve_expr(token, ctx),
         Rule::binding => {
             let mut inner = token.into_inner();
 
@@ -122,14 +129,10 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 _ => unreachable!(),
             };
 
-            let binding = Binding::new(ident_pair.as_str().into(), binding_type, &ctx);
+            let binding = CfbBinding::new(ident_pair.as_str().into(), binding_type, &ctx);
             ctx.bindings.insert(ident_pair.as_str().into(), binding);
 
-            Ok(ctx
-                .bindings
-                .get(ident_pair.as_str())
-                .unwrap()
-                .as_ti_init()?)
+            Ok(ctx.bindings.get(ident_pair.as_str()).unwrap().init_ti()?)
         }
         Rule::assignment_binding => {
             let ident = token
@@ -156,14 +159,10 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 _ => unreachable!(),
             };
 
-            let binding = Binding::new(ident.as_str().into(), binding_type, &ctx);
+            let binding = CfbBinding::new(ident.as_str().into(), binding_type, &ctx);
             ctx.bindings.insert(ident.as_str().into(), binding);
 
-            Ok(ctx
-                .bindings
-                .get(ident.as_str())
-                .unwrap()
-                .as_ti_init()?)
+            Ok(ctx.bindings.get(ident.as_str()).unwrap().init_ti()?)
         }
         Rule::assignment => {
             let (receiver, val_expr) = token.into_inner().take(2).collect_tuple().unwrap();
@@ -177,6 +176,14 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                     _ => unreachable!(),
                 }
             ))
+        }
+        Rule::r#const => {
+            let (ident, expr) = token.into_inner().take(2).collect_tuple().unwrap();
+            let value = resolve_expr(expr, ctx)?;
+
+            ctx.consts.insert(ident.as_str().into(), CfbConst(value));
+
+            Ok("".into())
         }
         Rule::builtin => {
             let builtin = token
@@ -220,7 +227,7 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
 }
 
 pub fn run() {
-    let src = include_str!("../let.cfb");
+    let src = include_str!("../for.cfb");
 
     let pairs = CfbParser::parse(Rule::program, src)
         .tap(|it| {
@@ -236,6 +243,7 @@ pub fn run() {
     let mut tib = String::new();
     let mut ctx = CfbCtx {
         bindings: HashMap::new(),
+        consts: HashMap::new(),
     };
 
     // TI-Basic Init
@@ -261,7 +269,7 @@ pub fn run() {
         .bindings
         .values()
         .filter(|each| !matches!(each.variant, BindingVariant::Num(_)))
-        .map(|each| each.as_ti_drop().unwrap())
+        .map(|each| each.drop_ti().unwrap())
         .join("")
         .borrow();
 

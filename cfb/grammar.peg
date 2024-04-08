@@ -10,7 +10,7 @@ stmt = _{ binding | assignment | assignment_binding | for_loop | while_loop | if
 expr = { primary ~ (operator ~ expr)* }
     primary = _{ literal | func_call | index | ident }
 
-const = { "const" ~ ident ~ literal }
+const = { "def" ~ ident ~ "=" ~ expr }
 binding = { "let" ~ ident ~ ":" ~ type }
     type = _{ num_type | str_type | vec_type | grid_type }
         num_type = { "Num" }
@@ -32,7 +32,7 @@ increment = { (ident | index) ~ "++" }
 
 // operator
 
-operator = { add | sub | mul | div | pow | eq | neq | gt | lt | gte | lte | and | or | xor | ncr | npr }
+operator = _{ add | sub | mul | div | pow | eq | neq | gt | lt | gte | lte | and | or | xor | ncr | npr }
     add = { "+" } 
     sub = { "-" }
     mul = { "*" }
@@ -68,11 +68,12 @@ block = { "{" ~ instr* ~ "}" }
 ident =  @{ (ASCII_ALPHANUMERIC | "_" )+ }
 index = { ident ~ "[" ~ expr ~ "]" }
 func_call = { ident ~ "(" ~ ((expr ~ ",")* ~ expr)? ~ ")" }
-literal = { str_literal | bool_literal | num_literal }
+literal = { str_literal | bool_literal | num_literal | vec_literal }
     str_literal = { "\"" ~ (raw_str)* ~ "\"" }
         raw_str = { (!("\"") ~ ANY)+ }
     num_literal = _{ inum_literal | fnum_literal }
         inum_literal = @{ "-"? ~ ASCII_DIGIT+ }
         fnum_literal = @{ inum_literal ~ "." ~ ASCII_DIGIT+ }
     bool_literal = _{ "true" | "false" }
+    vec_literal = { "{" ~ ((expr ~ ",")* ~ expr)? ~ "}"? }
  

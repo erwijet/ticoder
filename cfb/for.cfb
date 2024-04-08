@@ -1,0 +1,9 @@
+
+let n = 0
+def add = n + 1
+
+add
+add
+add
+
+Disp n

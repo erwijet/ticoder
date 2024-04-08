@@ -33,7 +33,7 @@ Menu("  Math24 Menu   ","Create set",AD,"Solve set",AE)
     while true {
         let valid be True
 
-        for i in 1 to 4 {
+        for 1 to 4 { i ->
             if abs(num_set(1,I))>n_max or fPart(num_set(i,I))!=0 {
                 valid := False
             }
