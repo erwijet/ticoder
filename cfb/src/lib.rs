@@ -1,5 +1,6 @@
 mod bindings;
 mod consts;
+mod labels;
 mod macros;
 mod registers;
 mod resolvers;
@@ -15,6 +16,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use bindings::{BindingVariant, CfbBinding};
 use consts::CfbConst;
 use itertools::Itertools;
+use labels::CfbLabel;
 use pest::{
     iterators::Pair,
     pratt_parser::{Assoc::Left, Op, PrattParser},
@@ -24,7 +26,7 @@ use pest_derive::Parser;
 use resolvers::{resolve_expr, resolve_ident, resolve_index, resolve_literal};
 use shared::PairUtils;
 use tap::{Pipe, Tap};
-use traits::CfbLifecycle;
+use traits::{AsTiBasic, CfbLifecycle};
 
 #[derive(Parser)]
 #[grammar = "../grammar.peg"]
@@ -54,44 +56,82 @@ fn pratt_parser() -> &'static PrattParser<Rule> {
 pub struct CfbCtx {
     pub bindings: HashMap<String, CfbBinding>,
     pub consts: HashMap<String, CfbConst>,
+    pub labels: HashMap<String, CfbLabel>,
 }
 
-// impl CfbCtx {
-//     fn create_binding<'a>(&'a mut self, name: String, binding_type: BindingType) -> &'a Binding {
-//         let id = self.bindings.values().pipe(|values| {
-//             if let BindingType::Grid(_, _) | BindingType::Vec(_) = binding_type {
-//                 values
-//                     .filter(|binding| {
-//                         matches!(
-//                             binding.binding_type,
-//                             BindingType::Grid(_, _) | BindingType::Vec(_)
-//                         )
-//                     })
-//                     .count()
-//             } else {
-//                 values
-//                     .filter(|binding| {
-//                         std::mem::discriminant(&binding.binding_type)
-//                             == std::mem::discriminant(&binding_type)
-//                     })
-//                     .count()
-//             }
-//         }) as u16;
+impl CfbCtx {
+    fn create_binding<'a>(
+        &'a mut self,
+        name: String,
+        variant: BindingVariant,
+    ) -> Result<&CfbBinding> {
+        if self.bindings.contains_key(&name) {
+            bail!("Binding '{name}' already exists")
+        }
 
-//         let binding = Binding {
-//             id,
-//             binding_type,
-//             name: name.to_owned(),
-//         };
+        let id = self
+            .bindings
+            .values()
+            .filter(|binding| {
+                std::mem::discriminant(&binding.variant) == std::mem::discriminant(&variant)
+            })
+            .count() as u16;
 
-//         self.bindings.insert(name.clone(), binding);
-//         &self.bindings.get(&name).unwrap()
-//     }
-// }
+        self.bindings.insert(
+            name.clone(),
+            CfbBinding {
+                id,
+                variant,
+                name: name.clone(),
+            },
+        );
+        Ok(self.bindings.get(&name).unwrap())
+    }
+
+    fn create_const(&mut self, name: String, value: String) -> Result<&CfbConst> {
+        if self.consts.contains_key(&name) {
+            bail!("Constant '{name}' was already defined")
+        }
+
+        self.consts.insert(name.clone(), CfbConst(value));
+        Ok(self.consts.get(&name).unwrap())
+    }
+
+    fn create_label(&mut self, name: String) -> Result<&CfbLabel> {
+        if self.bindings.contains_key(&name) {
+            bail!("Label '{name}' already exists");
+        }
+
+        let id = self.consts.len() as u16;
+
+        self.labels.insert(name.clone(), CfbLabel(id));
+        Ok(self.labels.get(&name).unwrap())
+    }
+}
 
 pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
     match token.as_rule() {
         Rule::expr => resolve_expr(token, ctx),
+        Rule::block => Ok(token
+            .into_inner()
+            .map(|each| resolve(each, ctx))
+            .collect::<Result<Vec<_>>>()?
+            .join("\n")),
+        Rule::named_block => {
+            let (name, block) = token.into_inner().take(2).collect_tuple().unwrap();
+
+            let label = ctx.create_label(name.as_str().strip_prefix("@").unwrap().into())?;
+
+            Ok(format!(
+                "{}\n{}",
+                label.as_tibasic()?,
+                block
+                    .into_inner()
+                    .map(|each| resolve(each, ctx))
+                    .collect::<Result<Vec<_>>>()?
+                    .join("\n")
+            ))
+        }
         Rule::binding => {
             let mut inner = token.into_inner();
 
@@ -106,7 +146,7 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 Rule::grid_type,
             ])?;
 
-            let binding_type: BindingVariant = match type_pair.as_rule() {
+            let variant: BindingVariant = match type_pair.as_rule() {
                 Rule::str_type => BindingVariant::Str(None),
                 Rule::num_type => BindingVariant::Num(None),
                 Rule::vec_type => BindingVariant::Vec(
@@ -129,10 +169,8 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 _ => unreachable!(),
             };
 
-            let binding = CfbBinding::new(ident_pair.as_str().into(), binding_type, &ctx);
-            ctx.bindings.insert(ident_pair.as_str().into(), binding);
-
-            Ok(ctx.bindings.get(ident_pair.as_str()).unwrap().init_ti()?)
+            ctx.create_binding(ident_pair.as_str().into(), variant)?
+                .init_ti()
         }
         Rule::assignment_binding => {
             let ident = token
@@ -146,7 +184,7 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 .exactly_one()
                 .map_err(|_| anyhow!("literal pair should have exactly 1 child"))?;
 
-            let binding_type = match literal.as_rule() {
+            let variant = match literal.as_rule() {
                 Rule::str_literal => BindingVariant::Str(Some(
                     literal.find_rule(Rule::raw_str).unwrap().as_str().into(),
                 )),
@@ -159,10 +197,8 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 _ => unreachable!(),
             };
 
-            let binding = CfbBinding::new(ident.as_str().into(), binding_type, &ctx);
-            ctx.bindings.insert(ident.as_str().into(), binding);
-
-            Ok(ctx.bindings.get(ident.as_str()).unwrap().init_ti()?)
+            ctx.create_binding(ident.as_str().into(), variant)?
+                .init_ti()
         }
         Rule::assignment => {
             let (receiver, val_expr) = token.into_inner().take(2).collect_tuple().unwrap();
@@ -244,6 +280,7 @@ pub fn run() {
     let mut ctx = CfbCtx {
         bindings: HashMap::new(),
         consts: HashMap::new(),
+        labels: HashMap::new(),
     };
 
     // TI-Basic Init

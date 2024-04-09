@@ -1,9 +1,13 @@
 
 let n = 0
-def add = n + 1
 
-add
-add
-add
+let arg0 : Num
+let arg1 : Num
 
-Disp n
+
+@test {
+    def add = arg0 + arg1
+    def sub = arg0 - arg1
+    Disp n
+}
+

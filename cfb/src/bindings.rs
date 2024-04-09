@@ -22,21 +22,6 @@ pub struct CfbBinding {
     pub id: u16,
 }
 
-impl CfbBinding {
-    fn next_id<'a, I: Iterator<Item = &'a Self>>(bindings: I, variant: &BindingVariant) -> u16 {
-        bindings
-            .filter(|binding| {
-                std::mem::discriminant(&binding.variant) == std::mem::discriminant(&variant)
-            })
-            .count() as u16
-    }
-
-    pub fn new<'a>(name: String, variant: BindingVariant, ctx: &CfbCtx) -> Self {
-        let id = CfbBinding::next_id(ctx.bindings.values(), &variant);
-        CfbBinding { variant, name, id }
-    }
-}
-
 impl AsTiBasic for CfbBinding {
     fn as_tibasic(&self) -> Result<String> {
         match &self.variant {
