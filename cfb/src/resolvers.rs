@@ -14,11 +14,10 @@ pub fn resolve_expr(expr: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
             Rule::literal => resolve_literal(primary, ctx),
             Rule::ident => resolve_ident(primary, ctx),
             Rule::index => resolve_index(primary, ctx),
-            _ => unreachable!(),
+            Rule::func_call => resolve_func_call(primary, ctx),
+            other => unreachable!("{other:?}"),
         })
-        .map_infix(|lhs, op, rhs| {
-            Ok(format!("({}{}{})", lhs?, op.as_str(), rhs?))
-        })
+        .map_infix(|lhs, op, rhs| Ok(format!("({}){}({})", lhs?, op.as_str(), rhs?)))
         .parse(expr.into_inner())
 }
 
@@ -36,6 +35,19 @@ pub fn resolve_ident(ident: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
     }
 
     bail!("unknown identifier: '{needle}'");
+}
+
+pub fn resolve_func_call(pair: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
+    let mut inner = pair.into_inner();
+    let ident = inner.nth(0).unwrap().as_str();
+
+    Ok(format!(
+        "{ident}({})",
+        inner
+            .map(|each| resolve_expr(each, ctx))
+            .collect::<Result<Vec<_>>>()?
+            .join(",")
+    ))
 }
 
 pub fn resolve_literal(pair: Pair<Rule>, _ctx: &mut CfbCtx) -> Result<String> {

@@ -102,7 +102,7 @@ impl CfbCtx {
             bail!("Label '{name}' already exists");
         }
 
-        let id = self.consts.len() as u16;
+        let id = self.labels.len() as u16;
 
         self.labels.insert(name.clone(), CfbLabel(id));
         Ok(self.labels.get(&name).unwrap())
@@ -123,7 +123,7 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
             let label = ctx.create_label(name.as_str().strip_prefix("@").unwrap().into())?;
 
             Ok(format!(
-                "{}\n{}",
+                "Lbl {}\n{}",
                 label.as_tibasic()?,
                 block
                     .into_inner()
@@ -131,6 +131,23 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                     .collect::<Result<Vec<_>>>()?
                     .join("\n")
             ))
+        }
+        Rule::jump => {
+            let ti_label = token
+                .into_inner()
+                .exactly_one()
+                .unwrap()
+                .as_str()
+                .strip_prefix(":")
+                .unwrap()
+                .pipe(|target| {
+                    ctx.labels
+                        .get(target)
+                        .context(format!("Unknown label '{target}'"))
+                })?
+                .as_tibasic()?;
+
+            Ok(format!("Goto {ti_label}"))
         }
         Rule::binding => {
             let mut inner = token.into_inner();

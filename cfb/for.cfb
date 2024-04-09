@@ -1,13 +1,23 @@
 
-let n = 0
-
-let arg0 : Num
-let arg1 : Num
 
 
-@test {
-    def add = arg0 + arg1
-    def sub = arg0 - arg1
-    Disp n
+let i = 5
+let j = 5
+
+@for_i {
+    j := 5
+    
+    @for_j {
+        Disp i
+        Disp j
+        Disp "--"
+
+        j := j - 1
+        If(j > 0)
+        jump :for_j
+    }
+
+    i := i - 1
+    If(i > 0)
+    jump :for_i
 }
-
