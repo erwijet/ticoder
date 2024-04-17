@@ -1979,7 +1979,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c2a198fb6b0eada2a8df47933734e6d35d350665a33a3593d7164fa52c75c19"
 dependencies = [
  "cfg-if",
- "windows-targets 0.52.4",
+ "windows-targets 0.48.5",
 ]
 
 [[package]]
@@ -4628,9 +4628,9 @@ dependencies = [
 
 [[package]]
 name = "tibrs"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7330af4aa26938972539bc0689cea99ca93ba32da5e26da20f04ae34d92bb820"
+checksum = "66e35adc29de41cd117a9a56ecc0eff3279684a486da4e2d7e5e78e17303ab53"
 dependencies = [
  "anyhow",
  "clap",

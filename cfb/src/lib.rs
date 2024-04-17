@@ -117,6 +117,30 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
             .map(|each| resolve(each, ctx))
             .collect::<Result<Vec<_>>>()?
             .join("\n")),
+        Rule::for_loop => {
+            // for_loop = { "for" ~ ident ~ "in" ~ inum_literal ~ for_mode ~ inum_literal ~ block }
+
+            let (ident, lower, mode, upper, block) =
+                token.into_inner().take(5).collect_tuple().unwrap();
+
+            let var = ctx
+                .create_binding(ident.as_str().into(), BindingVariant::Num(None))?
+                .as_tibasic()
+                .unwrap();
+
+            let lower = resolve_expr(lower, ctx)?;
+            let upper = resolve_expr(upper, ctx)?;
+            let body = resolve(block, ctx)?;
+
+            Ok(format!(
+                "For({var},{lower},{upper}{})\n{body}\nEnd",
+                if mode.as_str() == "downto" {
+                    ",[neg]1"
+                } else {
+                    ""
+                }
+            ))
+        }
         Rule::r#if => {
             let (expr, block) = token.into_inner().take(2).collect_tuple().unwrap();
             let cond = resolve_expr(expr, ctx)?;
