@@ -1,23 +1,16 @@
 
 
+let upper = 10
+let nums : Vec = { i ^ 2 | i in upper downto 0 }
+let j : Num = dim(nums)
 
-let i = 5
-let j = 5
+@print {
+    Disp nums[j]
 
-@for_i {
-    j := 5
-    
-    @for_j {
-        Disp i
-        Disp j
-        Disp "--"
-
-        j := j - 1
-        If(j > 0)
-        jump :for_j
+    j := j - 1
+    if j > 0 {
+        jump :print
     }
-
-    i := i - 1
-    If(i > 0)
-    jump :for_i
 }
+
+Disp nums

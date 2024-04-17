@@ -5,7 +5,7 @@ use itertools::Itertools;
 use pest::iterators::Pair;
 use tap::{Pipe, Tap};
 
-use crate::{pratt_parser, registers, shared::PairUtils, traits::AsTiBasic, CfbCtx, Rule};
+use crate::{pratt_parser, registers, shared::PairUtils, traits::{AsTiBasic, CfbLifecycle}, CfbCtx, Rule};
 
 pub fn resolve_expr(expr: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
     pratt_parser()
@@ -15,10 +15,26 @@ pub fn resolve_expr(expr: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
             Rule::ident => resolve_ident(primary, ctx),
             Rule::index => resolve_index(primary, ctx),
             Rule::func_call => resolve_func_call(primary, ctx),
+            Rule::inline_for => resolve_inline_for(primary, ctx),
             other => unreachable!("{other:?}"),
         })
         .map_infix(|lhs, op, rhs| Ok(format!("({}){}({})", lhs?, op.as_str(), rhs?)))
         .parse(expr.into_inner())
+}
+
+pub fn resolve_inline_for(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
+    let (expr, ident, lower, mode, upper) = token.into_inner().take(5).collect_tuple().unwrap();
+
+    let var = ctx.create_binding(ident.as_str().into(), crate::bindings::BindingVariant::Num(None))?.as_tibasic().unwrap();
+    let func = resolve_expr(expr, ctx)?;
+    let lower = resolve_expr(lower, ctx)?;
+    let upper = resolve_expr(upper, ctx)?;
+
+    if mode.as_str() == "downto" {
+        Ok(format!("seq({func},{var},{lower},{upper},[neg]1)"))
+    } else {
+        Ok(format!("seq({func},{var},{lower},{upper})"))
+    }
 }
 
 pub fn resolve_ident(ident: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {

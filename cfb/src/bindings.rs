@@ -12,7 +12,7 @@ use crate::{
 pub enum BindingVariant {
     Str(Option<String>),
     Num(Option<String>),
-    Vec(String),
+    Vec(String, Option<String>),
     Grid(String, String),
 }
 
@@ -30,7 +30,7 @@ impl AsTiBasic for CfbBinding {
                 .context("id out of bounds")?
                 .to_string()),
             BindingVariant::Str(inital) => Ok(format!("Str{}", self.id)),
-            BindingVariant::Vec(size) => Ok(format!(
+            BindingVariant::Vec(size, _) => Ok(format!(
                 "[list]LST{}",
                 ('A'..='Z')
                     .flat_map(|chr1| ('A'..='Z').map(move |chr2| format!("{chr1}{chr2}")))
@@ -63,18 +63,18 @@ impl CfbLifecycle for CfbBinding {
             BindingVariant::Grid(col, row) => {
                 Ok(format!("{{{col},{row}->dim({}", self.as_tibasic()?))
             }
-            BindingVariant::Vec(size) => Ok(format!(
-                "{size}->dim([list]LST{}",
-                ('A'..='Z')
-                    .flat_map(|chr1| ('A'..='Z').map(move |chr2| format!("{chr1}{chr2}")))
-                    .nth(self.id as usize)
-                    .context("id out of bounds")?
-            )),
+            BindingVariant::Vec(size, init) => {
+                if let Some(init) = init {
+                    Ok(format!("{init}->{}", self.as_tibasic()?))
+                } else {
+                    Ok(format!("{size}->dim({}", self.as_tibasic()?))
+                }
+            }
         }
     }
     fn drop_ti(&self) -> Result<String> {
         match &self.variant {
-            BindingVariant::Vec(_) => Ok(format!("ClrList {}", self.as_tibasic()?)),
+            BindingVariant::Vec(_, _) => Ok(format!("ClrList {}", self.as_tibasic()?)),
             _ => Ok(format!("DelVar {}", self.as_tibasic()?)),
         }
     }

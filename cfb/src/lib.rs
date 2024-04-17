@@ -117,6 +117,13 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
             .map(|each| resolve(each, ctx))
             .collect::<Result<Vec<_>>>()?
             .join("\n")),
+        Rule::r#if => {
+            let (expr, block) = token.into_inner().take(2).collect_tuple().unwrap();
+            let cond = resolve_expr(expr, ctx)?;
+            let content = resolve(block, ctx)?;
+
+            Ok(format!("If {cond}\nThen\n{content}\nEnd"))
+        }
         Rule::named_block => {
             let (name, block) = token.into_inner().take(2).collect_tuple().unwrap();
 
@@ -163,16 +170,23 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 Rule::grid_type,
             ])?;
 
+            let init_val = inner
+                .nth(0)
+                .map(|pair| resolve_expr(pair, ctx))
+                .transpose()?;
+
             let variant: BindingVariant = match type_pair.as_rule() {
-                Rule::str_type => BindingVariant::Str(None),
-                Rule::num_type => BindingVariant::Num(None),
-                Rule::vec_type => BindingVariant::Vec(
-                    type_pair
-                        .find_rule(Rule::inum_literal)
-                        .context("expected vec_type to have inum_literal child")?
-                        .as_str()
-                        .into(),
-                ),
+                Rule::str_type => BindingVariant::Str(init_val),
+                Rule::num_type => BindingVariant::Num(init_val),
+                Rule::vec_type => {
+                    let sz = type_pair
+                        .into_inner()
+                        .nth(0)
+                        .map(|pair| pair.as_str())
+                        .unwrap_or("0");
+
+                    BindingVariant::Vec(sz.into(), init_val)
+                }
                 Rule::grid_type => {
                     (if let [colpair, rowpair] = &type_pair.find_rules(Rule::inum_literal)[..] {
                         Ok(BindingVariant::Grid(
@@ -302,8 +316,6 @@ pub fn run() {
 
     // TI-Basic Init
 
-    tib += "0->dim([list]NMEM\n"; // initialize number variable list
-
     // Body
 
     for pair in pairs {
@@ -326,8 +338,6 @@ pub fn run() {
         .map(|each| each.drop_ti().unwrap())
         .join("")
         .borrow();
-
-    tib += "ClrList [list]NMEM"; // drop number memory
 
     println!("=====TIBASIC=====");
     println!("{tib}");
