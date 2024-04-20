@@ -43,3 +43,4 @@ impl CfbLifecycle for CfbReg {
 //
 
 pub static DROP_BINDING_REG: CfbReg = CfbReg("A");
+pub static FOR_EACH_IDX_REG: CfbReg = CfbReg("B");

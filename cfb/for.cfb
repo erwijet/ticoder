@@ -2,15 +2,14 @@
 
 let upper = 10
 let nums : Vec = { i ^ 2 | i in upper downto 0 }
-let j : Num = dim(nums)
 
-@print {
-    Disp nums[j]
-
-    j := j - 1
-    if j > 0 {
-        jump :print
-    }
+for n in 1 to dim(nums) {
+    Disp nums[n]
 }
 
-Disp nums
+upper++
+Disp upper
+upper--
+upper--
+upper--
+Disp upper

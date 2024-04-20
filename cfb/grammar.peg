@@ -6,7 +6,7 @@ COMMENT             =  _{ "//" ~ (!NEWLINE ~ ANY)* }
 program = { SOI ~ instr* ~ EOI }
 
 instr = _{ stmt | expr }
-stmt = _{ binding | assignment | assignment_binding | for_loop | while_loop | if | const | named_block | jump | builtin | assignment | increment }
+stmt = _{ binding | assignment | assignment_binding | for_loop | while_loop | if | const | named_block | jump | builtin | assignment | increment | decrement }
 expr = { primary ~ (operator ~ expr)* }
     primary = _{ inline_for | literal | func_call | index | ident }
 
@@ -19,7 +19,7 @@ binding = { "let" ~ ident ~ ":" ~ type ~ ("=" ~ expr)? }
         grid_type = { "Grid(" ~ inum_literal ~ "," ~ inum_literal ~ ")" }
 
 assignment_binding = { "let" ~ ident ~ "=" ~ literal }
-for_loop = { "for" ~ ident ~ "in" ~ inum_literal ~ for_mode ~ inum_literal ~ block }
+for_loop = { "for" ~ ident ~ "in" ~ expr ~ for_mode ~ expr ~ block }
 while_loop = { "while" ~ expr ~ block }
 if = { "if" ~ expr ~ block }
 inline_if = { expr ~ "if" ~ expr ~ "else" ~ expr }
@@ -30,6 +30,7 @@ named_block = { named_block_lbl ~ block }
 jump = { "jump" ~ jump_lbl }
     jump_lbl = @{ ":" ~ ident }
 increment = { (ident | index) ~ "++" }
+decrement = { (ident | index) ~ "--" }
 
 // operator
 

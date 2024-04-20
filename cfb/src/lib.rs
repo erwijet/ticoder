@@ -8,7 +8,7 @@ mod shared;
 mod traits;
 
 use std::{
-    borrow::Borrow, collections::HashMap, convert::identity, fmt::format, path::Iter,
+    borrow::Borrow, collections::HashMap, convert::identity, fmt::format, ops::Deref, path::Iter,
     sync::OnceLock,
 };
 
@@ -20,9 +20,10 @@ use labels::CfbLabel;
 use pest::{
     iterators::Pair,
     pratt_parser::{Assoc::Left, Op, PrattParser},
-    Parser,
+    Parser, RuleType,
 };
 use pest_derive::Parser;
+use registers::FOR_EACH_IDX_REG;
 use resolvers::{resolve_expr, resolve_ident, resolve_index, resolve_literal};
 use shared::PairUtils;
 use tap::{Pipe, Tap};
@@ -109,17 +110,15 @@ impl CfbCtx {
     }
 }
 
-pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
+pub fn resolve_stmt(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
     match token.as_rule() {
         Rule::expr => resolve_expr(token, ctx),
         Rule::block => Ok(token
             .into_inner()
-            .map(|each| resolve(each, ctx))
+            .map(|each| resolve_stmt(each, ctx))
             .collect::<Result<Vec<_>>>()?
             .join("\n")),
         Rule::for_loop => {
-            // for_loop = { "for" ~ ident ~ "in" ~ inum_literal ~ for_mode ~ inum_literal ~ block }
-
             let (ident, lower, mode, upper, block) =
                 token.into_inner().take(5).collect_tuple().unwrap();
 
@@ -130,7 +129,7 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
 
             let lower = resolve_expr(lower, ctx)?;
             let upper = resolve_expr(upper, ctx)?;
-            let body = resolve(block, ctx)?;
+            let body = resolve_stmt(block, ctx)?;
 
             Ok(format!(
                 "For({var},{lower},{upper}{})\n{body}\nEnd",
@@ -144,7 +143,7 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
         Rule::r#if => {
             let (expr, block) = token.into_inner().take(2).collect_tuple().unwrap();
             let cond = resolve_expr(expr, ctx)?;
-            let content = resolve(block, ctx)?;
+            let content = resolve_stmt(block, ctx)?;
 
             Ok(format!("If {cond}\nThen\n{content}\nEnd"))
         }
@@ -158,7 +157,7 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 label.as_tibasic()?,
                 block
                     .into_inner()
-                    .map(|each| resolve(each, ctx))
+                    .map(|each| resolve_stmt(each, ctx))
                     .collect::<Result<Vec<_>>>()?
                     .join("\n")
             ))
@@ -308,6 +307,18 @@ pub fn resolve(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
                 )),
             }
         }
+        Rule::increment => {
+            let ident = token.into_inner().nth(0).unwrap();
+            let var = resolve_ident(ident, ctx)?;
+
+            Ok(format!("{var}+1->{var}"))
+        }
+        Rule::decrement => {
+            let ident = token.into_inner().nth(0).unwrap();
+            let var = resolve_ident(ident, ctx)?;
+
+            Ok(format!("{var}-1->{var}"))
+        }
         Rule::EOI => Ok("".into()),
         _ => Ok(format!(
             "\"[noimpl ({:?})]: {}",
@@ -346,7 +357,7 @@ pub fn run() {
         println!("======== NEXT PAIR ==========");
         println!("{pair:#?}");
 
-        let result = maybe!(resolve(pair, &mut ctx), else let err in {
+        let result = maybe!(resolve_stmt(pair, &mut ctx), else let err in {
             eprintln!("{err:#?}");
             return;
         });
