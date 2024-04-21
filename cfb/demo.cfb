@@ -1,19 +1,16 @@
+const op_add = 0
+const op_sub = 1
+const op_mul = 2
+const op_div = 3
+const op_nop = 4
 
-define {
-    op_add = 0
-    op_sub = 1
-    op_mul = 2
-    op_div = 3
-    op_nop = 4
-}
-
-let n_max : Num
-let valid : Num
-let op1 : Num
-let op2 : Num
-let op3 : Num
-let op4 : Num
-let op : Num
+let n_max: num
+let valid: num
+let op1: num
+let op2: num
+let op3: num
+let op4: num
+let op: num
 
 let res : Num
 let cnt_num_set : Num

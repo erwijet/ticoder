@@ -54,18 +54,20 @@ fn pratt_parser() -> &'static PrattParser<Rule> {
     })
 }
 
+pub struct CfbScopeFrame {
+    binding_idents: Vec<String>,
+    const_idents: Vec<String>,
+}
+
 pub struct CfbCtx {
     pub bindings: HashMap<String, CfbBinding>,
     pub consts: HashMap<String, CfbConst>,
     pub labels: HashMap<String, CfbLabel>,
+    pub scope_frames: Vec<CfbScopeFrame>,
 }
 
 impl CfbCtx {
-    fn create_binding<'a>(
-        &'a mut self,
-        name: String,
-        variant: BindingVariant,
-    ) -> Result<&CfbBinding> {
+    fn create_binding(&mut self, name: String, variant: BindingVariant) -> Result<&CfbBinding> {
         if self.bindings.contains_key(&name) {
             bail!("Binding '{name}' already exists")
         }
@@ -86,6 +88,7 @@ impl CfbCtx {
                 name: name.clone(),
             },
         );
+        self.get_scope().binding_idents.push(name.clone());
         Ok(self.bindings.get(&name).unwrap())
     }
 
@@ -95,6 +98,7 @@ impl CfbCtx {
         }
 
         self.consts.insert(name.clone(), CfbConst(value));
+        self.get_scope().const_idents.push(name.clone());
         Ok(self.consts.get(&name).unwrap())
     }
 
@@ -112,17 +116,70 @@ impl CfbCtx {
         self.labels.insert(name.clone(), CfbLabel(id));
         Ok(self.labels.get(&name).unwrap())
     }
+
+    fn get_scope<'a>(&'a mut self) -> &'a mut CfbScopeFrame {
+        if self.scope_frames.is_empty() {
+            self.push_scope();
+            return self.get_scope();
+        }
+
+        self.scope_frames.last_mut().unwrap()
+    }
+
+    fn push_scope(&mut self) {
+        self.scope_frames.push(CfbScopeFrame {
+            binding_idents: vec![],
+            const_idents: vec![],
+        })
+    }
+
+    fn pop_scope(&mut self) -> String {
+        if let Some(frame) = self.scope_frames.pop() {
+            let binding_cleanup =
+                frame
+                    .binding_idents
+                    .clone()
+                    .into_iter()
+                    .fold(String::new(), |prev, cur| {
+                        format!(
+                            "{prev}\n{}",
+                            self.bindings.get(&cur).unwrap().drop_ti().unwrap()
+                        )
+                    });
+
+            // drop bindings
+
+            for ident in frame.binding_idents {
+                self.bindings.remove(&ident);
+            }
+
+            // drop consts
+
+            for ident in frame.const_idents {
+                self.consts.remove(&ident);
+            }
+
+            binding_cleanup
+        } else {
+            "".into()
+        }
+    }
 }
 
 pub fn resolve_stmt(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
     match token.as_rule() {
         Rule::pass => Ok("".into()),
         Rule::expr => resolve_expr(token, ctx),
-        Rule::block => Ok(token
-            .into_inner()
-            .map(|each| resolve_stmt(each, ctx))
-            .collect::<Result<Vec<_>>>()?
-            .join("\n")),
+        Rule::block => {
+            ctx.push_scope();
+            let body = token
+                .into_inner()
+                .map(|each| resolve_stmt(each, ctx))
+                .collect::<Result<Vec<_>>>()?
+                .join("\n");
+
+            Ok(format!("{body}\n{}", ctx.pop_scope()))
+        }
         Rule::while_loop => {
             let (cond, block) = token.into_inner().take(2).collect_tuple().unwrap();
 
@@ -362,6 +419,7 @@ pub fn resolve_stmt(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
 
             Ok(format!("{var}-1->{var}"))
         }
+        Rule::COMMENT => Ok("".into()),
         Rule::EOI => Ok("".into()),
         _ => Ok(format!(
             "\"[noimpl ({:?})]: {}",
@@ -390,6 +448,7 @@ pub fn run() {
         bindings: HashMap::new(),
         consts: HashMap::new(),
         labels: HashMap::new(),
+        scope_frames: Vec::new(),
     };
 
     // TI-Basic Init

@@ -1,12 +1,12 @@
 
-
 menu "Whats Next?" {
     "Cont" :: {
 
         menu "Are you sure?" {
             "No" :: pass
             "Yes" :: {
-                Disp "Ok"
+                let n = 10
+                Disp n
             }
         }
 
@@ -15,3 +15,6 @@ menu "Whats Next?" {
         Disp "Womp Womp"
     }
 }
+
+let n = 20
+Disp n
