@@ -1,21 +1,21 @@
 
-let n_max : Num
-let valid : Num
-let op1 : Num
-let op2 : Num
-let op3 : Num
-let op4 : Num
-let op : Num
+let n_max: num
+let valid: num
+let op1: num
+let op2: num
+let op3: num
+let op4: num
+let op: num
 
-let res : Num
-let cnt_num_set : Num
-let tmp : Num
+let res: num
+let cnt_num_set: num
+let tmp: num
 
 Menu("  Math24 Menu   ","Create set",AD,"Solve set",AE)
 
 @create_set {
-    let op_set : Vec(4)
-    let num_set : Vec(3)
+    let op_set : vec(4)
+    let num_set : vec(3)
 
     cnt_num_set := 0
     op := op_nop

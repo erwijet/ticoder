@@ -57,3 +57,20 @@ impl<'a> PairUtils<'a> for Pair<'a, Rule> {
         bail!("expected {self:#?} to be of the following rule types: {rules:#?}")
     }
 }
+
+//
+
+pub trait CfbIterUtil<T> {
+    fn head_tail(&mut self) -> Option<(T, Vec<T>)>;
+}
+
+impl<I, T> CfbIterUtil<T> for I
+where
+    I: Iterator<Item = T>,
+{
+    fn head_tail<'a>(&'a mut self) -> Option<(T, Vec<T>)> {
+        let head = self.nth(0)?;
+        let rest = self.collect_vec();
+        Some((head, rest))
+    }
+}

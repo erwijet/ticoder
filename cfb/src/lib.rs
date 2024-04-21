@@ -25,7 +25,7 @@ use pest::{
 use pest_derive::Parser;
 use registers::FOR_EACH_IDX_REG;
 use resolvers::{resolve_expr, resolve_ident, resolve_index, resolve_literal};
-use shared::PairUtils;
+use shared::{CfbIterUtil, PairUtils};
 use tap::{Pipe, Tap};
 use traits::{AsTiBasic, CfbLifecycle};
 
@@ -98,6 +98,10 @@ impl CfbCtx {
         Ok(self.consts.get(&name).unwrap())
     }
 
+    fn create_anon_label(&mut self) -> Result<&CfbLabel> {
+        self.create_label(format!("@@anon_{}", self.labels.len()))
+    }
+
     fn create_label(&mut self, name: String) -> Result<&CfbLabel> {
         if self.bindings.contains_key(&name) {
             bail!("Label '{name}' already exists");
@@ -112,12 +116,51 @@ impl CfbCtx {
 
 pub fn resolve_stmt(token: Pair<Rule>, ctx: &mut CfbCtx) -> Result<String> {
     match token.as_rule() {
+        Rule::pass => Ok("".into()),
         Rule::expr => resolve_expr(token, ctx),
         Rule::block => Ok(token
             .into_inner()
             .map(|each| resolve_stmt(each, ctx))
             .collect::<Result<Vec<_>>>()?
             .join("\n")),
+        Rule::while_loop => {
+            let (cond, block) = token.into_inner().take(2).collect_tuple().unwrap();
+
+            Ok(format!(
+                "While {}\n{}\nEnd",
+                resolve_expr(cond, ctx)?,
+                resolve_stmt(block, ctx)?
+            ))
+        }
+        Rule::menu => {
+            let (name_pair, arm_pairs) = token.into_inner().head_tail().unwrap();
+            let name = resolve_expr(name_pair, ctx)?;
+            let exit_lbl = ctx.create_anon_label()?.as_tibasic()?;
+
+            let regions = arm_pairs
+                .into_iter()
+                .map(|each| {
+                    let (case_pair, body_pair) = each.into_inner().take(2).collect_tuple().unwrap();
+                    let case = resolve_expr(case_pair, ctx)?;
+                    let body = resolve_stmt(body_pair, ctx)?;
+
+                    let lbl = ctx.create_anon_label()?.as_tibasic()?;
+                    Ok((case, lbl, body))
+                })
+                .collect::<Result<Vec<_>>>()?;
+
+            Ok(format!(
+                "Menu({name},{})\n{}\nLbl {exit_lbl}",
+                regions
+                    .iter()
+                    .map(|(case, lbl, _)| format!("{case},{lbl}"))
+                    .join(","),
+                regions
+                    .iter()
+                    .map(|(_, lbl, block)| format!("Lbl {lbl}\n{block}"))
+                    .join(&format!("\nGoto {exit_lbl}\n"))
+            ))
+        }
         Rule::for_loop => {
             let (ident, lower, mode, upper, block) =
                 token.into_inner().take(5).collect_tuple().unwrap();

@@ -1,5 +1,6 @@
 use crate::traits::AsTiBasic;
 
+#[derive(Clone, Debug)]
 pub struct CfbLabel(pub u16);
 
 impl AsTiBasic for CfbLabel {
