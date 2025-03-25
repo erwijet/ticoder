@@ -1,0 +1,65 @@
+generator client {
+    provider      = "prisma-client-js"
+    binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id String @id @default(cuid())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  name    String
+  blockly String
+  source  String
+
+  published Boolean @default(false)
+  Star      Star[]
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id])
+}
+
+model Account {
+  id     String @id @default(cuid())
+  userId String
+
+  displayName String
+  followers   Follower[] @relation("Followers")
+  following   Follower[] @relation("Following")
+  Star        Star[]
+  Project     Project[]
+}
+
+model Star {
+  id        String  @id @default(cuid())
+  account   Account @relation(fields: [accountId], references: [id])
+  accountId String
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String
+}
+
+model Follower {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  followedAt  DateTime @default(now())
+
+  follower  Account @relation("Followers", fields: [followerId], references: [id])
+  following Account @relation("Following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+}
+
+/** @deprecated */
+model Program {
+  id Int @id @default(autoincrement())
+
+  name      String
+  createdAt DateTime @default(now())
+  blockly   String?
+  public    Boolean  @default(false)
+}

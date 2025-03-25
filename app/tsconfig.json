@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "jsx": "react-jsx",
+        "target": "ES2015",
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "skipLibCheck": true,
+        "lib": ["DOM", "DOM.Iterable", "ES2024"],
+        "paths": {
+            "shared/*": ["./src/shared/*"],
+            "src/*": ["./src/*"]
+        }
+    }
+}
