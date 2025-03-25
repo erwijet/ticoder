@@ -3,7 +3,8 @@ import { createFileRoute, Outlet, redirect, useNavigate, useRouteContext } from 
 import { Navbar } from "src/components/navbar";
 import { useEffect } from "react";
 import { session, SessionRenewer } from "shared/session";
-import { qc } from "shared/api";
+import { api, qc } from "shared/api";
+import { runCatching } from "shared/fns";
 
 function component() {
     return (
@@ -34,6 +35,9 @@ export const Route = createFileRoute("/_auth")({
     beforeLoad: async () => {
         const token = session.getToken();
         if (!token) throw redirect({ to: "/login" });
+
+        // check for account
+        if (!(await api.account.get.query())) throw redirect({ to: "/onboarding" });
 
         return {
             session: await qc.ensureQueryData(session.queryOptions()),

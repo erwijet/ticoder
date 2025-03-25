@@ -75,7 +75,7 @@ const appRouter = t.router({
         renew: authenticated.query(({ ctx: { token } }) => notary.renew(token)),
     },
     account: {
-        get: authenticated.resource.query(({ ctx: { account } }) => account),
+        get: authenticated.query(({ ctx: { userId } }) => prisma.account.findFirst({ where: { userId } })),
         create: authenticated.input(z.object({ displayName: z.string() })).mutation(({ input, ctx: { userId } }) =>
             prisma.account.create({
                 data: {
