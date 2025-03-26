@@ -58,11 +58,11 @@ export const ProjectEditor = () => {
     }, [deferredJson]);
 
     async function handleCompile() {
-        await updateProject({ id, ...createProjectResourceParams({ ...form.getValues(), name: "TESTING" }) });
+        await updateProject({ id, ...createProjectResourceParams({ ...form.getValues(), name: form.values.name }) });
         const { bytes } = await compileProject(id);
 
         downloadBlob(new Uint8Array(bytes), {
-            name: "TESTING.8xp",
+            name: form.values.name + ".8xp",
             type: "application/octet-stream",
         });
     }
