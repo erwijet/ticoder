@@ -21,9 +21,7 @@ function component() {
                 </AppShell.Navbar>
 
                 <AppShell.Main>
-                    <Container>
-                        <Outlet />
-                    </Container>
+                    <Outlet />
                 </AppShell.Main>
             </AppShell>
         </>

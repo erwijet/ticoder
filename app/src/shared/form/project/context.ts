@@ -10,7 +10,7 @@ const projectStateSchema = z.object({
     published: z.boolean(),
 });
 
-type ProjectState = z.infer<typeof projectStateSchema>;
+export type ProjectState = z.infer<typeof projectStateSchema>;
 
 export function createProjectState(resource: Project): ProjectState {
     return resource;

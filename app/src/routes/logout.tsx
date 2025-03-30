@@ -2,7 +2,6 @@ import { Center, Loader, Stack, Text } from "@mantine/core";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { session } from "shared/session";
-import { z } from "zod";
 
 function component() {
     const nav = useNavigate();
