@@ -1,21 +1,19 @@
-import { ActionIcon, Badge, Button, Divider, Group, Menu, Stack, Text, TextInput, TextInputProps, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Button, Divider, Group, Menu, Stack, Text, TextInput, Title } from "@mantine/core";
 import { useField } from "@mantine/form";
 import { modals } from "@mantine/modals";
-import { notifications } from "@mantine/notifications";
 import { Project } from "@prisma/client";
-import { createFileRoute, useNavigate, useStableCallback } from "@tanstack/react-router";
-import { BlendIcon, EllipsisVerticalIcon, InfoIcon, LockIcon, PencilIcon, SearchIcon, X } from "lucide-react";
-import { forwardRef, useDeferredValue, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { EllipsisVerticalIcon, PencilIcon, SearchIcon } from "lucide-react";
+import { useDeferredValue } from "react";
 import { alert } from "shared/alert";
 import { trpc } from "shared/api";
+import { PrivateBadge, PublicBadge } from "shared/components/badges";
 import { Layout } from "shared/components/Layout";
 import { ProjectNamePanel } from "shared/components/panel/ProjectNamePanel";
 import { formatRelativeTimeAgo } from "shared/datetime";
 import { downloadBlob } from "shared/download";
-import { createProjectState, useProjectForm } from "shared/form/project/context";
+import { createProjectState } from "shared/form/project/context";
 import { useProjectActions } from "shared/form/project/use-project-actions";
-import { useTiCalc } from "shared/react-ticalc";
-import { tifiles } from "ticalc-usb";
 
 function component() {
     const [data] = trpc.project.mine.useSuspenseQuery();
@@ -23,8 +21,6 @@ function component() {
     const search = useField({ initialValue: "" });
     const deferredSearch = useDeferredValue(search.getValue());
     const projects = data.filter((it) => it.name.toLocaleLowerCase().includes(deferredSearch));
-
-    const newProjectTitle = useField({ initialValue: "PROJECT" });
 
     const { mutateAsync: createProject } = trpc.project.create.useMutation();
 
@@ -89,15 +85,7 @@ function ProjectCard(props: ProjectCardProps) {
                 <Stack gap={0}>
                     <Group>
                         <Text>{props.project.name}</Text>
-                        {props.project.published ? (
-                            <Badge size="sm" variant="light" radius="xs" color="indigo" leftSection={<BlendIcon size={12} />}>
-                                Public
-                            </Badge>
-                        ) : (
-                            <Badge size="sm" variant="light" color="gray" leftSection={<LockIcon size={12} />} radius="xs">
-                                Private
-                            </Badge>
-                        )}
+                        {props.project.published ? <PublicBadge /> : <PrivateBadge />}
                     </Group>
 
                     <Text size="sm" c="dimmed" fs="italic">

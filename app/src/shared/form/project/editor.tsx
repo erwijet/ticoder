@@ -1,5 +1,6 @@
 import "src/blockly/prelude"; // load block library
 
+import { useElementSize } from "@mantine/hooks";
 import { useDeferredValue, useEffect, useRef } from "react";
 import * as Blockly from "blockly/core";
 import { buildToolbox, generator } from "src/blockly/core";
@@ -7,8 +8,10 @@ import { useBlocklyWorkspace } from "react-blockly";
 
 import { useProjectFormContext } from "./context";
 import { runCatching } from "shared/fns";
+import { useLayout } from "shared/components/Layout";
 
 export const ProjectEditor = () => {
+    const layout = useLayout();
     const form = useProjectFormContext();
     const ref = useRef(null);
 
@@ -49,10 +52,8 @@ export const ProjectEditor = () => {
     }, [deferredJson]);
 
     return (
-        <>
-            <div style={{ height: "100vh", display: "flex" }}>
-                <div ref={ref} style={{ height: "100%", flex: "1" }} />
-            </div>
-        </>
+        <div style={{ height: `calc(100vh - ${layout.headingRef.current?.clientHeight}px)`, width: "100%" }}>
+            <div ref={ref} style={{ height: "100%", width: "100%" }} />
+        </div>
     );
 };

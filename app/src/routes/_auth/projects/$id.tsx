@@ -1,7 +1,8 @@
-import { ActionIcon, Button, Menu, Title } from "@mantine/core";
+import { ActionIcon, Button, Group, Menu, Title } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import {
+    ChevronDownIcon,
     Edit3Icon,
     EllipsisIcon,
     EllipsisVerticalIcon,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { alert } from "shared/alert";
 import { trpc } from "shared/api";
+import { PublicBadge } from "shared/components/badges";
 import { Layout } from "shared/components/Layout";
 import { ProjectNamePanel } from "shared/components/panel/ProjectNamePanel";
 import { downloadBlob } from "shared/download";
@@ -97,9 +99,36 @@ function component() {
                 </Layout.Title>
 
                 <Layout.Action>
-                    <Button variant="default" leftSection={<SaveIcon size={16} />} loading={tracer.isLoading("save")} onClick={handleSave}>
-                        Save
-                    </Button>
+                    <Group wrap="nowrap" gap={0}>
+                        <Button
+                            variant="default"
+                            leftSection={<SaveIcon size={16} />}
+                            loading={tracer.isLoading("save")}
+                            onClick={handleSave}
+                            style={{ borderTopRightRadius: "0", borderBottomRightRadius: "0" }}
+                        >
+                            Save
+                        </Button>
+                        <Menu>
+                            <Menu.Target>
+                                <ActionIcon
+                                    color="text"
+                                    variant="default"
+                                    size={36}
+                                    style={{
+                                        borderTopLeftRadius: "0",
+                                        borderBottomLeftRadius: "0",
+                                        borderLeft: "none",
+                                    }}
+                                >
+                                    <ChevronDownIcon size={16} />
+                                </ActionIcon>
+                            </Menu.Target>
+                            <Menu.Dropdown>
+                                <Menu.Item onClick={() => tracer.trace("save")(actions.sendToCalculator())}>Send to Calculator</Menu.Item>
+                            </Menu.Dropdown>
+                        </Menu>
+                    </Group>
                 </Layout.Action>
 
                 <Layout.Action>
@@ -111,9 +140,6 @@ function component() {
                         </Menu.Target>
 
                         <Menu.Dropdown>
-                            <Menu.Item leftSection={<SendIcon size={16} />} onClick={actions.sendToCalculator}>
-                                Send to Calculator
-                            </Menu.Item>
                             <Menu.Item leftSection={<FileCode2Icon size={16} />} onClick={handleDownloadTxt}>
                                 Download .txt
                             </Menu.Item>

@@ -3,7 +3,9 @@ import { modals } from "@mantine/modals";
 import { alert } from "shared/alert";
 import { trpc } from "shared/api";
 import { downloadBlob } from "shared/download";
+import { runPromising } from "shared/fns";
 import { createProjectResourceParams, ProjectState } from "shared/form/project/context";
+import { just, maybe } from "shared/fp";
 import { useTiCalc } from "shared/react-ticalc";
 import { tifiles } from "ticalc-usb";
 
@@ -16,7 +18,7 @@ export function useProjectActions(opts: { id: string; project: ProjectState; onI
 
     async function sendToCalculator() {
         const loader = alert.createLoader("Sending to calculator...");
-        await choose().catch(loader.discard);
+        await choose().catch(loader.dismiss);
 
         const result = await compileProject(opts.id).catch(loader.error);
 
@@ -25,8 +27,10 @@ export function useProjectActions(opts: { id: string; project: ProjectState; onI
             return;
         }
 
-        const buffer = new Uint8Array(result.bytes);
-        await new Promise<void>((resolve) => queueFile(tifiles.parseFile(buffer), resolve));
+        await just(result.bytes)
+            .map(Uint8Array.from)
+            .map(tifiles.parseFile)
+            .take((file) => runPromising((didSend) => queueFile(file, didSend)));
 
         loader.ok("Sent to calculator.");
     }

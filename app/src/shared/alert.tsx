@@ -58,7 +58,7 @@ export const alert = {
                 notifications.hide(toastId);
                 alert.error(msg);
             },
-            discard: () => {
+            dismiss: () => {
                 notifications.hide(toastId);
             },
         };

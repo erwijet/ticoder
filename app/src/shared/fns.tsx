@@ -18,6 +18,10 @@ export function runCapturing<T>(f: (capture: (v: T) => void) => unknown): T | vo
     }
 }
 
+export function runPromising(f: (resolve: () => void, reject: (e?: unknown) => void) => unknown) {
+    return new Promise<void>(f);
+}
+
 export function run<T>(f: () => T): T {
     return f();
 }
