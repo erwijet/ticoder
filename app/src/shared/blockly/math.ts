@@ -1,7 +1,23 @@
-import { block, categories, ord } from "src/blockly/core";
+import { block, ord } from "shared/blockly/core";
+
+const shadows = {
+    rhs: {
+        blockType: "val_num",
+        fields: {
+            value: 10,
+        },
+    },
+    lhs: {
+        blockType: "val_num",
+        fields: {
+            value: 10,
+        },
+    },
+};
 
 block("math_add")
-    .hue(categories.Math)
+    .meta("category", "Math")
+    .meta("shadow", shadows)
     .slot("lhs", { allow: "native-num", content: (v) => v })
     .slot("rhs", { allow: "native-num", content: (v) => v.text("+") })
     .inline()
@@ -9,7 +25,8 @@ block("math_add")
     .impl(({ resolve }) => ({ value: `${resolve("lhs")}+${resolve("rhs")}`, order: ord.ADDITION }));
 
 block("math_sub")
-    .hue(categories.Math)
+    .meta("category", "Math")
+    .meta("shadow", shadows)
     .slot("lhs", { allow: "native-num", content: (v) => v })
     .slot("rhs", { allow: "native-num", content: (v) => v.text("-") })
     .inline()

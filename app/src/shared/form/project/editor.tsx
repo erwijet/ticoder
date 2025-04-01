@@ -1,14 +1,15 @@
-import "src/blockly/prelude"; // load block library
+import "shared/blockly/prelude"; // load block library
 
-import { useElementSize } from "@mantine/hooks";
-import { useDeferredValue, useEffect, useRef } from "react";
+import { shadowBlockConversionChangeListener } from "@blockly/shadow-block-converter";
 import * as Blockly from "blockly/core";
-import { buildToolbox, generator } from "src/blockly/core";
+import { useDeferredValue, useEffect, useRef } from "react";
 import { useBlocklyWorkspace } from "react-blockly";
+import { generator, toolbox } from "shared/blockly/core";
 
-import { useProjectFormContext } from "./context";
-import { runCatching } from "shared/fns";
 import { useLayout } from "shared/components/Layout";
+import { runCatching } from "shared/fns";
+import { useProjectFormContext } from "shared/form/project/context";
+import { processVariables } from "shared/blockly/postprocess";
 
 export const ProjectEditor = () => {
     const layout = useLayout();
@@ -33,8 +34,21 @@ export const ProjectEditor = () => {
             },
         },
         initialJson: runCatching(() => JSON.parse(form.values.blockly)),
-        toolboxConfiguration: buildToolbox(),
+        toolboxConfiguration: toolbox.buildToolbox(),
     });
+
+    useEffect(() => {
+        // set up default variables...
+        if (workspace?.getAllVariables().filter((it) => it.type == "native-str").length == 0)
+            workspace?.createVariable("myTextVariable", "native-str");
+
+        // and event listeners...
+        workspace?.addChangeListener(shadowBlockConversionChangeListener);
+
+        return () => {
+            workspace?.removeChangeListener(shadowBlockConversionChangeListener);
+        };
+    }, [workspace]);
 
     const deferredJson = useDeferredValue(json);
 
@@ -48,12 +62,14 @@ export const ProjectEditor = () => {
             .map((blk) => generator.blockToCode(blk))
             .join('\n"--\n');
 
-        form.setFieldValue("source", source);
+        form.setFieldValue("source", processVariables(workspace, source));
     }, [deferredJson]);
 
     return (
-        <div style={{ height: `calc(100vh - ${layout.headingRef.current?.clientHeight}px)`, width: "100%" }}>
-            <div ref={ref} style={{ height: "100%", width: "100%" }} />
-        </div>
+        <>
+            <div style={{ height: `calc(100vh - ${layout.headingRef.current?.clientHeight}px)`, width: "100%" }}>
+                <div ref={ref} style={{ height: "100%", width: "100%" }} />
+            </div>
+        </>
     );
 };

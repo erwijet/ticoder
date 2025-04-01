@@ -1,10 +1,8 @@
 import { AppShell, Burger, Container } from "@mantine/core";
 import { createFileRoute, Outlet, redirect, useNavigate, useRouteContext } from "@tanstack/react-router";
-import { Navbar } from "src/components/navbar";
-import { useEffect } from "react";
+import { Navbar } from "shared/components/navbar";
 import { session, SessionRenewer } from "shared/session";
 import { api, qc } from "shared/api";
-import { runCatching } from "shared/fns";
 
 function component() {
     return (

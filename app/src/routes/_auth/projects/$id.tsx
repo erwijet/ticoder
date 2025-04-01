@@ -1,7 +1,9 @@
-import { ActionIcon, Button, Group, Menu, Title } from "@mantine/core";
+import { ActionIcon, Button, Drawer, Group, Menu, Title, Stack, Text, Anchor, Divider, Code } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import {
+    BracesIcon,
     ChevronDownIcon,
     Edit3Icon,
     EllipsisIcon,
@@ -23,6 +25,7 @@ import { PublicBadge } from "shared/components/badges";
 import { Layout } from "shared/components/Layout";
 import { ProjectNamePanel } from "shared/components/panel/ProjectNamePanel";
 import { downloadBlob } from "shared/download";
+import { runPromising } from "shared/fns";
 import {
     createProjectResourceParams,
     createProjectState,
@@ -37,6 +40,7 @@ import { useTracer } from "shared/use-tracer";
 function component() {
     const nav = useNavigate();
     const { id } = useParams({ from: "/_auth/projects/$id" });
+
     const [data, { refetch }] = trpc.project.get.useSuspenseQuery(id);
     const { mutateAsync: updateProject } = trpc.project.update.useMutation();
     const { mutateAsync: compileProject } = trpc.project.compile.useMutation();
@@ -48,16 +52,7 @@ function component() {
 
     const tracer = useTracer("save", "update");
     const actions = useProjectActions({ id, project: form.values });
-
-    async function handleCompile() {
-        await updateProject({ id, ...createProjectResourceParams({ ...form.getValues(), name: form.values.name }) });
-        const { bytes } = await compileProject(id);
-
-        downloadBlob(new Uint8Array(bytes), {
-            name: form.values.name + ".8xp",
-            type: "application/octet-stream",
-        });
-    }
+    const [sourceDrawerOpened, sourceDrawer] = useDisclosure();
 
     async function handleDownloadTxt() {
         downloadBlob(form.values.source, {
@@ -79,10 +74,13 @@ function component() {
                 <ProjectNamePanel
                     action="Rename"
                     defaultValue={form.values.name}
-                    onDone={({ name }) => {
-                        form.setFieldValue("name", name);
-                        modals.closeAll();
-                    }}
+                    onDone={({ name }) =>
+                        runPromising((done) => {
+                            form.setFieldValue("name", name);
+                            modals.closeAll();
+                            done();
+                        })
+                    }
                 />
             ),
         });
@@ -90,6 +88,26 @@ function component() {
 
     return (
         <ProjectFormProvider form={form}>
+            <Drawer
+                opened={sourceDrawerOpened}
+                title={<Title order={3}>Generated TIBasic</Title>}
+                onClose={sourceDrawer.close}
+                position="right"
+            >
+                <Stack>
+                    <Text size="xs" c="dimmed">
+                        TIBasic is the code that is sent to the calculator to be executed! <br />
+                        You can learn more about it at{" "}
+                        <Anchor target="_blank" href="http://tibasicdev.wikidot.com/sk:overview">
+                            tibasicdev.wikidot.com
+                        </Anchor>
+                        .
+                    </Text>
+                    <Divider mx="-md" />
+                    <Code block>{form.values.source}</Code>
+                </Stack>
+            </Drawer>
+
             <Layout>
                 <Layout.Title>{form.values.name}</Layout.Title>
                 <Layout.Title>
@@ -145,6 +163,9 @@ function component() {
                             </Menu.Item>
                             <Menu.Item leftSection={<FileCogIcon size={16} />} onClick={actions.download8xp}>
                                 Download .8xp
+                            </Menu.Item>
+                            <Menu.Item leftSection={<BracesIcon size={16} />} onClick={sourceDrawer.open}>
+                                View Generated Code
                             </Menu.Item>
                             <Menu.Divider />
                             <Menu.Item

@@ -1,10 +1,10 @@
-import { api, trpc } from "shared/api";
-import { runCatching } from "shared/fns";
 import { queryOptions } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { logger } from "src/shared/logger";
+import { api, trpc } from "shared/api";
+import { runCatching } from "shared/fns";
+import { logger } from "shared/logger";
 
-const key = "app.ticoder.notary.token";
+const key = "dev.ticoder.notary.token";
 
 export const session = {
     getToken: () => localStorage.getItem(key),

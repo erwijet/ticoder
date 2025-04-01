@@ -1,7 +1,7 @@
 import { Box, Group, Text, Stack, Button, Menu, rem, Image, Title, Divider, Space, Avatar, UnstyledButton } from "@mantine/core";
 import { Link, useMatches, useNavigate, useRouteContext, useRouter } from "@tanstack/react-router";
 import { useMemo } from "react";
-import brand from "../public/brand.png?url";
+import brand from "src/public/brand.png?url";
 import { maybe } from "shared/fp";
 
 export function Navbar() {

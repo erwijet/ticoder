@@ -7,6 +7,7 @@ import { runPromising } from "shared/fns";
 import { createProjectResourceParams, ProjectState } from "shared/form/project/context";
 import { just, maybe } from "shared/fp";
 import { useTiCalc } from "shared/react-ticalc";
+import { useTracer } from "shared/use-tracer";
 import { tifiles } from "ticalc-usb";
 
 export function useProjectActions(opts: { id: string; project: ProjectState; onInvalidate?: () => unknown }) {
@@ -95,10 +96,11 @@ export function useProjectActions(opts: { id: string; project: ProjectState; onI
                 },
                 onCancel: reject,
                 async onConfirm() {
-                    await deleteProject(opts.id).catch(alert.error);
+                    const loader = alert.createLoader("Deleting project...");
+                    await deleteProject(opts.id).catch(loader.error);
 
                     opts.onInvalidate?.();
-                    alert.ok("Deleted project.");
+                    loader.ok("Deleted project.");
                     resolve();
                 },
             });

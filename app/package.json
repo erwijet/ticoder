@@ -13,6 +13,8 @@
   "author": "Tyler Holewinski <tyler@holewinski.dev>",
   "license": "ISC",
   "dependencies": {
+    "@blockly/block-shareable-procedures": "^5.0.12",
+    "@blockly/shadow-block-converter": "^6.0.13",
     "@chakra-ui/react": "^2.8.2",
     "@emotion/css": "^11.11.2",
     "@emotion/styled": "^11.11.0",
@@ -34,7 +36,7 @@
     "@trpc/react-query": "11.0.0-rc.833",
     "@trpc/server": "11.0.0-rc.833",
     "@types/react-dom": "^18.2.19",
-    "better-blockly": "^0.2.1",
+    "better-blockly": "^0.3.0",
     "blockly": "^11.2.2",
     "framer-motion": "^11.0.3",
     "jwt-decode": "^4.0.0",

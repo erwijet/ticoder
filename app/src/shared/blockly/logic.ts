@@ -1,7 +1,7 @@
-import { block, categories } from "src/blockly/core";
+import { block } from "shared/blockly/core";
 
 block("logic_eq")
-    .hue(categories.Logic)
+    .meta("category", "Logic")
     .inline()
     .outputs("Boolean")
     .slot("lhs", { allow: "*", content: (v) => v })

@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { Stack, TextInput, Button, Tooltip } from "@mantine/core";
 import { InfoIcon } from "lucide-react";
+import { useTracer } from "shared/use-tracer";
 
-export const ProjectNamePanel = (props: { defaultValue?: string; action?: string; onDone: (values: { name: string }) => unknown }) => {
+export const ProjectNamePanel = (props: {
+    defaultValue?: string;
+    action?: string;
+    onDone: (values: { name: string }) => Promise<unknown>;
+}) => {
     const [name, setName] = useState(props.defaultValue ?? "PROJECT");
+    const tracer = useTracer("onDone");
 
     return (
         <Stack>
@@ -28,7 +34,7 @@ export const ProjectNamePanel = (props: { defaultValue?: string; action?: string
                     )
                 }
             />
-            <Button ml="auto" onClick={() => props.onDone({ name })}>
+            <Button ml="auto" onClick={() => tracer.trace("onDone")(props.onDone({ name }))} loading={tracer.isLoading("onDone")}>
                 {props.action}
             </Button>
         </Stack>

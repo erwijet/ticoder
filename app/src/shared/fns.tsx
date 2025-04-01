@@ -8,16 +8,6 @@ export function runCatching<T>(f: () => T): T | undefined {
     }
 }
 
-export function runCapturing<T>(f: (capture: (v: T) => void) => unknown): T | void {
-    try {
-        f((captured) => {
-            throw captured;
-        });
-    } catch (thrown: unknown) {
-        return thrown as T;
-    }
-}
-
 export function runPromising(f: (resolve: () => void, reject: (e?: unknown) => void) => unknown) {
     return new Promise<void>(f);
 }

@@ -14,6 +14,7 @@ import { formatRelativeTimeAgo } from "shared/datetime";
 import { downloadBlob } from "shared/download";
 import { createProjectState } from "shared/form/project/context";
 import { useProjectActions } from "shared/form/project/use-project-actions";
+import { useTracer } from "shared/use-tracer";
 
 function component() {
     const [data] = trpc.project.mine.useSuspenseQuery();
@@ -21,6 +22,7 @@ function component() {
     const search = useField({ initialValue: "" });
     const deferredSearch = useDeferredValue(search.getValue());
     const projects = data.filter((it) => it.name.toLocaleLowerCase().includes(deferredSearch));
+    const tracer = useTracer("create");
 
     const { mutateAsync: createProject } = trpc.project.create.useMutation();
 

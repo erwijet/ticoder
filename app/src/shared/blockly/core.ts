@@ -1,13 +1,26 @@
 import * as Blockly from "blockly/core";
-import { createBlockBuilder, createCustomContentView } from "better-blockly";
-import { runCapturing } from "shared/fns";
+import { createBlockBuilder, createCustomContentView, createToolboxPlugin } from "better-blockly";
+import * as shareableProcedures from "@blockly/block-shareable-procedures";
+
+Blockly.common.defineBlocks(shareableProcedures.blocks);
 
 export const generator = new Blockly.Generator("ticoder");
+
+export const toolbox = createToolboxPlugin({
+    categories: {
+        Flow: { color: "rgb(153, 102, 255)" },
+        Values: { color: "rgb(207, 99, 207)" },
+        Math: { color: "rgb(255, 51, 85)" },
+        Text: { color: "rgb(255, 140, 26)" },
+        Logic: { color: "rgb(92, 177, 214)" },
+    },
+});
 
 export const block = createBlockBuilder({
     Blockly,
     generator,
-    customTypes: ["native-str", "native-num", "native-lst", "bool"],
+    customTypes: ["native-str", "native-num", "native-lst", "ctx-menu", "bool"],
+    plugins: [toolbox.register()],
 });
 
 export const views = {
@@ -39,15 +52,6 @@ export const views = {
             ),
         }),
     ),
-};
-
-export const categories = {
-    Control: 40,
-    IO: 120,
-    Values: 282,
-    Flow: 70,
-    Math: 170,
-    Logic: 200,
 };
 
 /** adapted from https://github.com/google/blockly/blob/1fe82b23545b9a344d5365f15b01dd7bbea2bcbc/generators/javascript/javascript_generator.js#L29 */
@@ -88,32 +92,3 @@ export const ord = {
     COMMA: 18, // ,
     NONE: 99, // (...)
 };
-
-function getHueForBlock(name: string): number {
-    return (
-        runCapturing((capture) => {
-            Blockly.Blocks[name].init.bind({
-                setColour(hue: number) {
-                    capture(hue);
-                },
-            })();
-        }) ?? 0
-    );
-}
-
-export function buildToolbox() {
-    return {
-        kind: "categoryToolbox",
-        contents: Object.keys(categories).map((category) => ({
-            kind: "category",
-            name: category,
-            colour: categories[category as keyof typeof categories],
-            contents: Object.keys(Blockly.Blocks)
-                .filter((key) => getHueForBlock(key) == categories[category as keyof typeof categories])
-                .map((key) => ({
-                    kind: "block",
-                    type: key,
-                })),
-        })),
-    };
-}
