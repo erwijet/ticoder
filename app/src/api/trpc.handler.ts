@@ -79,7 +79,7 @@ const appRouter = t.router({
         .query(({ input: handle }) => prisma.account.findFirst({ where: { handle } }).then((it) => !it)),
     account: {
         get: authenticated.query(({ ctx: { userId } }) => prisma.account.findFirst({ where: { userId } })),
-        create: authenticated.input(z.object({ displayName: z.string() })).mutation(({ input, ctx: { user } }) =>
+        create: authenticated.input(z.object({ displayName: z.string(), handle: z.string() })).mutation(({ input, ctx: { user } }) =>
             prisma.account.create({
                 data: {
                     ...input,
