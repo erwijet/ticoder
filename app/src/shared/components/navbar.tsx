@@ -6,7 +6,7 @@ import { maybe } from "shared/fp";
 
 export function Navbar() {
     const { flatRoutes } = useRouter();
-    const { session } = useRouteContext({ from: "/_auth" });
+    const { session, account } = useRouteContext({ from: "/_auth" });
     const nav = useNavigate();
     const matches = useMatches();
     const navRoutes = useMemo(
@@ -68,7 +68,7 @@ export function Navbar() {
                                     </Text>
 
                                     <Text size="xs" c="dimmed" truncate="end" title={session?.email}>
-                                        {session?.email}
+                                        @{account?.handle}
                                     </Text>
                                 </Stack>
                             </Group>

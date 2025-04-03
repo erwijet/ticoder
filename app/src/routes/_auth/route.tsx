@@ -33,10 +33,12 @@ export const Route = createFileRoute("/_auth")({
         if (!token) throw redirect({ to: "/login" });
 
         // check for account
-        if (!(await api.account.get.query())) throw redirect({ to: "/onboarding" });
+        const account = await api.account.get.query();
+        if (!account) throw redirect({ to: "/onboarding" });
 
         return {
             session: await qc.ensureQueryData(session.queryOptions()),
+            account,
         };
     },
 });

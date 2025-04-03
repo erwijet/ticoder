@@ -21,24 +21,13 @@ model Project {
 
   accountId String
   account   Account @relation(fields: [accountId], references: [id])
-
-  variables Variable[]
-}
-
-model Variable {
-  id        String @id @default(cuid())
-  blocklyId String
-  name      String
-  type      String
-
-  project   Project @relation(fields: [projectId], references: [id])
-  projectId String
 }
 
 model Account {
   id     String @id @default(cuid())
   userId String
 
+  handle      String?
   email       String @default("no-account@ticoder.dev")
   displayName String
   followers   Follower[] @relation("Followers")
@@ -65,14 +54,4 @@ model Follower {
   following Account @relation("Following", fields: [followingId], references: [id])
 
   @@unique([followerId, followingId])
-}
-
-/** @deprecated */
-model Program {
-  id Int @id @default(autoincrement())
-
-  name      String
-  createdAt DateTime @default(now())
-  blockly   String?
-  public    Boolean  @default(false)
 }

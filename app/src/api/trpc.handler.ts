@@ -74,6 +74,9 @@ const appRouter = t.router({
         authenticate: t.procedure.input(z.literal("google")).query(({ input: via }) => notary.authenticate({ via })),
         renew: authenticated.query(({ ctx: { token } }) => notary.renew(token)),
     },
+    isHandleAvalible: t.procedure
+        .input(z.string())
+        .query(({ input: handle }) => prisma.account.findFirst({ where: { handle } }).then((it) => !it)),
     account: {
         get: authenticated.query(({ ctx: { userId } }) => prisma.account.findFirst({ where: { userId } })),
         create: authenticated.input(z.object({ displayName: z.string() })).mutation(({ input, ctx: { user } }) =>

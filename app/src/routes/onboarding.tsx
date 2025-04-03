@@ -3,13 +3,14 @@ import { useField } from "@mantine/form";
 import { createFileRoute, Link, redirect, useLoaderData, useNavigate } from "@tanstack/react-router";
 import { alert } from "shared/alert";
 import { api, trpc } from "shared/api";
-import { Layout } from "shared/components/Layout";
-import { runCatching } from "shared/fns";
 
 function component() {
     const nav = useNavigate();
     const { session } = useLoaderData({ from: "/onboarding" });
     const name = useField({ initialValue: session.user.fullname });
+    const username = useField({
+        initialValue: session.user.fullname.replaceAll(/\s/g, "").toLocaleLowerCase() + "-" + Math.round(Math.random() * 100),
+    });
     const agreedToTOS = useField({ type: "checkbox", initialValue: false });
 
     const { mutateAsync: createAccount } = trpc.account.create.useMutation();
@@ -30,6 +31,7 @@ function component() {
 
                 <Fieldset legend="Personal Information">
                     <TextInput label="Display Name" {...name.getInputProps()} />
+                    <TextInput leftSection={<Text c="dimmed">@</Text>} label="Username" {...username.getInputProps()} />
                 </Fieldset>
 
                 <Checkbox
