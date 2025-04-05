@@ -163,6 +163,11 @@ const appRouter = t.router({
                 })
                 .then(ensure.nonnull()),
         ),
+        isStarred: authenticated.resource
+            .input(z.string().cuid())
+            .query(({ ctx: { account }, input }) =>
+                prisma.star.findMany({ where: { account, projectId: input } }).then((it) => it.length > 0),
+            ),
         star: authenticated.resource
             .input(z.string().cuid())
             .mutation(({ ctx: { account }, input }) =>

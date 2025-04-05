@@ -30,7 +30,7 @@ function component() {
 }
 
 function TopProjects() {
-    const [projects] = trpc.projects.top.useSuspenseQuery();
+    const [projects, { refetch }] = trpc.projects.top.useSuspenseQuery();
 
     return (
         <Stack>
@@ -41,7 +41,7 @@ function TopProjects() {
 
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
                 {projects.map((project) => (
-                    <ProjectCard key={project.id} project={project} />
+                    <ProjectCard key={project.id} project={project} onInvalidate={refetch} />
                 ))}
             </SimpleGrid>
         </Stack>
@@ -49,7 +49,7 @@ function TopProjects() {
 }
 
 function Following() {
-    const [projects] = trpc.projects.following.useSuspenseQuery();
+    const [projects, { refetch }] = trpc.projects.following.useSuspenseQuery();
 
     return (
         <Stack>
@@ -57,7 +57,7 @@ function Following() {
 
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
                 {projects.map((project) => (
-                    <ProjectCard key={project.id} project={project} />
+                    <ProjectCard key={project.id} project={project} onInvalidate={refetch} />
                 ))}
             </SimpleGrid>
         </Stack>

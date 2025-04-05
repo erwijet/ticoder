@@ -22,7 +22,7 @@ block("math_add")
     .slot("rhs", { allow: "native-num", content: (v) => v.text("+") })
     .inline()
     .outputs("native-num")
-    .impl(({ resolve }) => ({ value: `${resolve("lhs")}+${resolve("rhs")}`, order: ord.ADDITION }));
+    .impl(({ resolve }) => ({ value: `(${resolve("lhs")}+${resolve("rhs")})`, order: ord.ADDITION }));
 
 block("math_sub")
     .meta("category", "Math")
@@ -31,7 +31,7 @@ block("math_sub")
     .slot("rhs", { allow: "native-num", content: (v) => v.text("-") })
     .inline()
     .outputs("native-num")
-    .impl(({ resolve }) => ({ value: `${resolve("lhs")}-${resolve("rhs")}`, order: ord.SUBTRACTION }));
+    .impl(({ resolve }) => ({ value: `(${resolve("lhs")}-${resolve("rhs")})`, order: ord.SUBTRACTION }));
 
 block("math_mul")
     .meta("category", "Math")
@@ -40,7 +40,7 @@ block("math_mul")
     .slot("rhs", { allow: "native-num", content: (v) => v.text("*") })
     .inline()
     .outputs("native-num")
-    .impl(({ resolve }) => ({ value: `${resolve("lhs")}*${resolve("rhs")}`, order: ord.MULTIPLICATION }));
+    .impl(({ resolve }) => ({ value: `(${resolve("lhs")}*${resolve("rhs")})`, order: ord.MULTIPLICATION }));
 
 block("math_div")
     .meta("category", "Math")
@@ -49,7 +49,7 @@ block("math_div")
     .slot("rhs", { allow: "native-num", content: (v) => v.text("/") })
     .inline()
     .outputs("native-num")
-    .impl(({ resolve }) => ({ value: `${resolve("lhs")}/${resolve("rhs")}`, order: ord.DIVISION }));
+    .impl(({ resolve }) => ({ value: `(${resolve("lhs")}/${resolve("rhs")})`, order: ord.DIVISION }));
 
 block("math_pow")
     .meta("category", "Math")
@@ -71,7 +71,7 @@ block("math_pow")
     .slot("rhs", { allow: "native-num", content: (v) => v.text("to the power of") })
     .inline()
     .outputs("native-num")
-    .impl(({ resolve }) => ({ value: `${resolve("lhs")}^${resolve("rhs")}`, order: ord.EXPONENTIATION }));
+    .impl(({ resolve }) => ({ value: `(${resolve("lhs")}^${resolve("rhs")})`, order: ord.EXPONENTIATION }));
 
 block("math_sqrt")
     .meta("category", "Math")

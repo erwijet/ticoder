@@ -7,6 +7,7 @@ import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { createTheme, MantineProvider } from "@mantine/core";
 import { trpc, client } from "shared/api";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
@@ -33,6 +34,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <StrictMode>
         <trpc.Provider client={client} queryClient={qc}>
             <QueryClientProvider client={qc}>
+                <ReactQueryDevtools initialIsOpen={false} />
                 <MantineProvider theme={theme}>
                     <ModalsProvider modalProps={{ centered: true }}>
                         <Notifications />
