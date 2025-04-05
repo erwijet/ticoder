@@ -29,16 +29,18 @@ export const Layout = Object.assign(
         return (
             <Box w="100%" h="100%">
                 <div ref={headingRef}>
-                    <Box style={{ borderBottom: "solid 1px var(--mantine-color-default-border)" }}>
-                        <Container>
-                            <Box pos="sticky" top={0} w="100%" p="sm" bg="background" style={{ zIndex: 1e2 }}>
-                                <Group w="100%" justify="space-between">
-                                    <Title order={1}>{slots.LayoutTitle}</Title>
-                                    <Group>{slots.LayoutAction}</Group>
-                                </Group>
-                            </Box>
-                        </Container>
-                    </Box>
+                    {slots.LayoutTitle.length > 0 && (
+                        <Box style={{ borderBottom: "solid 1px var(--mantine-color-default-border)" }}>
+                            <Container>
+                                <Box pos="sticky" top={0} w="100%" p="sm" bg="background" style={{ zIndex: 1e2 }}>
+                                    <Group w="100%" justify="space-between">
+                                        <Title order={1}>{slots.LayoutTitle}</Title>
+                                        <Group>{slots.LayoutAction}</Group>
+                                    </Group>
+                                </Box>
+                            </Container>
+                        </Box>
+                    )}
                 </div>
                 <ctx.Provider value={{ headingRef }}>
                     <Wrapper {...rest} mod={{ wrapper: true }}>
@@ -46,7 +48,7 @@ export const Layout = Object.assign(
                         {just(slots.rest)
                             .filter((it) => it.length > 0)
                             ?.take((rest) => (
-                                <Container mt="xl">
+                                <Container mt={slots.LayoutTitle.length > 0 ? "xl" : 0}>
                                     <Stack>{rest}</Stack>
                                 </Container>
                             ))}

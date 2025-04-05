@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_auth")({
         if (!token) throw redirect({ to: "/login" });
 
         // check for account
-        const account = await api.account.get.query();
+        const account = await api.account.self.get.query();
         if (!account) throw redirect({ to: "/onboarding" });
 
         return {

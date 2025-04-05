@@ -1,11 +1,11 @@
 import { createNotary, Notary } from "@erwijet/notary";
 import { PrismaClient } from "@prisma/client";
-import { runCatching } from "shared/fns";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { TRPC_ERROR_CODE_KEY } from "@trpc/server/dist/rpc";
-import { defineEventHandler, toWebRequest } from "vinxi/http";
+import { runCatching } from "shared/fns";
 import superjson from "superjson";
+import { defineEventHandler, toWebRequest } from "vinxi/http";
 import { z } from "zod";
 
 const notary = createNotary({
@@ -78,7 +78,46 @@ const appRouter = t.router({
         .input(z.string())
         .query(({ input: handle }) => prisma.account.findFirst({ where: { handle } }).then((it) => !it)),
     account: {
-        get: authenticated.query(({ ctx: { userId } }) => prisma.account.findFirst({ where: { userId } })),
+        self: {
+            get: authenticated.query(({ ctx: { userId } }) => prisma.account.findFirst({ where: { userId } })),
+            profile: authenticated.resource.query(({ ctx: { userId } }) =>
+                prisma.account
+                    .findFirst({ where: { userId }, include: { followers: true, following: true, projects: true, stars: true } })
+                    .then(ensure.nonnull()),
+            ),
+        },
+        isFollowing: authenticated.resource
+            .input(z.string().cuid())
+            .query(({ ctx: { account }, input }) =>
+                prisma.follower.findMany({ where: { followerId: account.id, followingId: input } }).then((it) => it.length > 0),
+            ),
+        get: authenticated.input(z.string().cuid()).query(({ input }) =>
+            prisma.account
+                .findFirst({
+                    where: { id: input },
+                    include: { followers: true, following: true, projects: true, stars: true },
+                })
+                .then(ensure.nonnull()),
+        ),
+        byHandle: authenticated.input(z.string()).query(({ input }) =>
+            prisma.account
+                .findFirst({
+                    where: { handle: input.trim().replaceAll("@", "").toLowerCase() },
+                    include: { followers: true, following: true, projects: true, stars: true },
+                })
+                .then(ensure.nonnull()),
+        ),
+        follow: authenticated.resource
+            .input(z.string())
+            .mutation(({ ctx: { account }, input }) => prisma.follower.create({ data: { followerId: account.id, followingId: input } })),
+        unfollow: authenticated.resource
+            .input(z.string())
+            .mutation(({ ctx: { account }, input }) =>
+                prisma.follower.deleteMany({ where: { followerId: account.id, followingId: input } }),
+            ),
+        search: authenticated
+            .input(z.string())
+            .query(({ input }) => prisma.account.findMany({ where: { handle: { contains: input } }, take: 10 })),
         create: authenticated.input(z.object({ displayName: z.string(), handle: z.string() })).mutation(({ input, ctx: { user } }) =>
             prisma.account.create({
                 data: {
@@ -86,6 +125,26 @@ const appRouter = t.router({
                     email: user.email,
                     userId: user.userId,
                 },
+            }),
+        ),
+    },
+    projects: {
+        ownedBy: authenticated.resource
+            .input(z.string().cuid())
+            .query(({ input }) =>
+                prisma.project.findMany({ where: { accountId: input }, include: { account: true, _count: { select: { stars: true } } } }),
+            ),
+        following: authenticated.resource.query(({ ctx: { account } }) =>
+            prisma.project.findMany({
+                where: { account: { followers: { some: { followerId: account.id } } } },
+                include: { _count: { select: { stars: true } }, account: true },
+            }),
+        ),
+        top: authenticated.query(() =>
+            prisma.project.findMany({
+                orderBy: { stars: { _count: "desc" } },
+                include: { account: true, _count: { select: { stars: true } } },
+                take: 10,
             }),
         ),
     },
@@ -104,7 +163,17 @@ const appRouter = t.router({
                 })
                 .then(ensure.nonnull()),
         ),
-        mine: authenticated.resource.query(({ ctx: { account } }) => prisma.project.findMany({ where: { account } })),
+        star: authenticated.resource
+            .input(z.string().cuid())
+            .mutation(({ ctx: { account }, input }) =>
+                prisma.star.create({ data: { account: { connect: { id: account.id } }, project: { connect: { id: input } } } }),
+            ),
+        unstar: authenticated.resource
+            .input(z.string().cuid())
+            .mutation(({ ctx: { account }, input }) => prisma.star.deleteMany({ where: { account, projectId: input } })),
+        mine: authenticated.resource.query(({ ctx: { account } }) =>
+            prisma.project.findMany({ where: { account }, include: { stars: true } }),
+        ),
         duplicate: authenticated.resource.input(z.string().cuid()).mutation(({ ctx: { account }, input: id }) =>
             prisma.project
                 .findFirst({

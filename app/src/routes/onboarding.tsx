@@ -106,7 +106,7 @@ export const Route = createFileRoute("/onboarding")({
     component,
     async loader() {
         const session = await api.session.get.query();
-        const account = await api.account.get.query();
+        const account = await api.account.self.get.query();
         if (!!account) throw redirect({ to: "/" }); // if the user already has an account, bounce them
 
         return { session };

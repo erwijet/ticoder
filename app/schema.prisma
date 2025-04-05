@@ -1,6 +1,7 @@
 generator client {
     provider      = "prisma-client-js"
     binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl", "linux-musl-arm64-openssl-3.0.x"]
+    previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
@@ -13,11 +14,12 @@ model Project {
   updatedAt DateTime @default(now()) @updatedAt
 
   name    String
+  description String @default("")
   blockly String
   source  String
 
   published Boolean @default(false)
-  Star      Star[]
+  stars     Star[]
 
   accountId String
   account   Account @relation(fields: [accountId], references: [id])
@@ -27,13 +29,13 @@ model Account {
   id     String @id @default(cuid())
   userId String
 
-  handle      String?
+  handle      String
   email       String @default("no-account@ticoder.dev")
   displayName String
-  followers   Follower[] @relation("Followers")
-  following   Follower[] @relation("Following")
-  Star        Star[]
-  Project     Project[]
+  following   Follower[] @relation("Followers")
+  followers   Follower[] @relation("Following")
+  stars       Star[]
+  projects    Project[]
 }
 
 model Star {
@@ -50,7 +52,7 @@ model Follower {
   followingId String
   followedAt  DateTime @default(now())
 
-  follower  Account @relation("Followers", fields: [followerId], references: [id])
+  followers Account @relation("Followers", fields: [followerId], references: [id])
   following Account @relation("Following", fields: [followingId], references: [id])
 
   @@unique([followerId, followingId])
