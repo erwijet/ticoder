@@ -1,37 +1,50 @@
-import { block, views } from "shared/blockly/core";
+import { block } from "shared/blockly/core";
 
-block("io_input")
+block("val_str")
     .meta("category", "Text")
-    .content((v) =>
-        v
-            .text("ask “")
-            .textbox("prompt", "value?")
-            .text("” for ")
-            .variable("var", { types: ["native-str"] }),
-    )
-    .impl(({ fields }) => {
-        if (fields.prompt.toLowerCase() == fields.var.toLowerCase() + "?") return "Prompt " + fields.var;
-        return `Input \"${fields.prompt + " "}\",${fields.var}`;
-    });
+    .content((v) => v.text("“").textbox("value", "text").text("”"))
+    .outputs("native-str")
+    .impl(({ fields }) => `"${fields.value}"`);
 
-block("io_disp")
+block("var_str")
     .meta("category", "Text")
+    .content((v) => v.variable("var", { types: ["native-str"] }))
+    .outputs("native-str")
+    .impl(({ fields }) => fields.var);
+
+block("var_str_set")
+    .meta("category", "Text")
+    .slot("val", {
+        allow: "native-str",
+        content: (v) =>
+            v
+                .text("set")
+                .variable("var", { types: ["native-str"] })
+                .text("to"),
+    })
+    .impl(({ fields, resolve }) => `${resolve("val")}->${fields.var}`);
+
+block("str_concat")
+    .meta("category", "Text")
+    .meta("shadow", {
+        lhs: {
+            blockType: "val_str",
+            fields: { value: "hello, " },
+        },
+        rhs: {
+            blockType: "val_str",
+            fields: { value: "world" },
+        },
+    })
+    .slot("lhs", { allow: "native-str", content: (v) => v.text("join") })
+    .slot("rhs", { allow: "native-str", content: (v) => v.text("with") })
     .inline()
-    .slot("text", { allow: "*", content: (v) => v.text("say") })
-    .meta("shadow", { text: { blockType: "val_str", fields: { value: "Hello" } } })
-    .impl(({ resolve }) => "Disp " + resolve("text"));
+    .outputs("native-str")
+    .impl(({ resolve }) => `${resolve("lhs")}+${resolve("rhs")}`);
 
-// block("io_output")
-//     .meta("category", "I/O")
-//     .content((v) => v.text("output"))
-//     .impl(() => "");
-
-// block("io_getKey")
-//     .meta("category", "I/O")
-//     .content((v) => v.text("getKey"))
-//     .impl(() => "");
-
-// block("io_clrHome")
-//     .meta("category", "I/O")
-//     .content((v) => v.text("ClrHome"))
-//     .impl(() => "");
+block("val_text_len")
+    .meta("category", "Text")
+    .meta("shadow-field:str", "str")
+    .slot("str", { allow: "native-str", content: (v) => v.text("length of ") })
+    .outputs("native-num")
+    .impl(({ resolve }) => `length(${resolve("str")})`);

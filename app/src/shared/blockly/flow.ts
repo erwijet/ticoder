@@ -1,3 +1,4 @@
+import { resultOf } from "@trpc/client/dist/links/internals/urlWithConnectionParams";
 import { block } from "shared/blockly/core";
 
 block("flow_start")
@@ -19,14 +20,14 @@ block("flow_comment")
 
 block("flow_if")
     .meta("category", "Flow")
-    .slot("cond", { allow: "Boolean", content: (v) => v.text("if ") })
+    .slot("cond", { allow: "bool", content: (v) => v.text("if ") })
     .content((v) => v.text("then"))
     .stmt("then", { allow: "*" })
     .impl(({ resolve }) => `If ${resolve("cond")}\nThen\n${resolve("then")}\nEnd`);
 
 block("flow_if_else")
     .meta("category", "Flow")
-    .slot("cond", { allow: "Boolean", content: (v) => v.text("if ") })
+    .slot("cond", { allow: "bool", content: (v) => v.text("if ") })
     .content((v) => v.text("then"))
     .stmt("then", { allow: "*" })
     .content((v) => v.text("else"))
@@ -60,3 +61,31 @@ block("flow_wait")
         },
     })
     .impl(({ resolve }) => `rand(${resolve("delaySec")}00`);
+
+block("flow_while")
+    .meta("category", "Flow")
+    .slot("cond", { allow: "bool", content: (v) => v.text("while") })
+    .stmt("body", { allow: "*" })
+    .impl(({ resolve }) => `While ${resolve("cond")}\n${resolve("body")}\nEnd`);
+
+block("flow_repeat")
+    .meta("category", "Flow")
+    .content((v) => v.text("repeat"))
+    .stmt("body", { allow: "*" })
+    .slot("cond", { allow: "bool", content: (v) => v.text("until") })
+    .impl(({ resolve }) => `Repeat ${resolve("cond")}\n${resolve("body")}\nEnd`);
+
+block("flow_for")
+    .meta("category", "Flow")
+    .meta("shadow", { lower: { blockType: "val_num", fields: { value: 0 } }, upper: { blockType: "val_num", fields: { value: 10 } } })
+    .inline()
+    .content((v) =>
+        v
+            .text("with")
+            .variable("var", { types: ["native-num"] })
+            .text("ranging from"),
+    )
+    .slot("lower", { allow: "native-num", content: (v) => v })
+    .slot("upper", { allow: "native-num", content: (v) => v.text("to") })
+    .stmt("body", { allow: "*" })
+    .impl(({ fields, resolve }) => `For(${fields.var},${resolve("lower")},${resolve("upper")}\n${resolve("body")}\nEnd`);

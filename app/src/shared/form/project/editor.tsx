@@ -10,6 +10,11 @@ import { useLayout } from "shared/components/Layout";
 import { runCatching } from "shared/fns";
 import { useProjectFormContext } from "shared/form/project/context";
 import { processVariables } from "shared/blockly/postprocess";
+import { create } from "zustand";
+
+export const workspaceStore = create<{ set: (workspace: Blockly.Workspace) => void; workspace?: Blockly.Workspace }>()((set) => ({
+    set: (ws: Blockly.Workspace) => set({ workspace: ws }),
+}));
 
 export const ProjectEditor = () => {
     const layout = useLayout();
@@ -44,6 +49,8 @@ export const ProjectEditor = () => {
 
         // and event listeners...
         workspace?.addChangeListener(shadowBlockConversionChangeListener);
+
+        workspaceStore.getState().set(workspace!);
 
         return () => {
             workspace?.removeChangeListener(shadowBlockConversionChangeListener);

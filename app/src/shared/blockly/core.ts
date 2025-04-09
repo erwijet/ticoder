@@ -1,16 +1,39 @@
 import * as Blockly from "blockly/core";
-import { createBlockBuilder, createCustomContentView, createToolboxPlugin } from "better-blockly";
-import * as shareableProcedures from "@blockly/block-shareable-procedures";
-
-Blockly.common.defineBlocks(shareableProcedures.blocks);
+import { createBlockBuilder, createToolboxPlugin } from "better-blockly";
+import { createPresetShadowsPlugin } from "shared/blockly/plugin";
+import { workspaceStore } from "shared/form/project/editor";
 
 export const generator = new Blockly.Generator("ticoder");
+
+const shadows = createPresetShadowsPlugin({
+    presets: ({ num }) => ({
+        num: {
+            blockType: "val_num",
+            fields: {
+                value: num ?? 10,
+            },
+        },
+        str: {
+            blockType: "val_str",
+            fields: {
+                value: "text",
+            },
+        },
+        bool: {
+            blockType: "val_bool",
+            fields: {
+                value: true,
+            },
+        },
+    }),
+});
 
 export const toolbox = createToolboxPlugin({
     categories: {
         Flow: { color: "rgb(153, 102, 255)" },
-        Values: { color: "rgb(207, 99, 207)" },
         Math: { color: "rgb(255, 51, 85)" },
+        Screen: { color: "rgb(102, 204, 102)" },
+        Lists: { color: "rgb(207, 99, 207)" },
         Text: { color: "rgb(255, 140, 26)" },
         Logic: { color: "rgb(92, 177, 214)" },
     },
@@ -20,39 +43,23 @@ export const block = createBlockBuilder({
     Blockly,
     generator,
     customTypes: ["native-str", "native-num", "native-lst", "ctx-menu", "bool"],
-    plugins: [toolbox.register()],
+    plugins: [shadows.register(), toolbox.register()],
 });
 
-export const views = {
-    numVarDropdown: createCustomContentView(({ key, builder }) =>
-        builder.dropdown(
-            key,
-            Object.fromEntries(
-                "XYZABCDEFGHIJKLMNOPQRSTUVW"
-                    .split("")
-                    .map((each) => [each, each])
-                    .concat([["ϴ", "[theta]"]]),
-            ),
-        ),
-    ),
-    strVarDropdown: createCustomContentView(({ key, builder }) =>
-        builder.dropdown(
-            key,
-            Array.from({ length: 9 }, (_, n) => `str${n}`),
-        ),
-    ),
-    varDropdown: createCustomContentView(({ key, builder }) =>
-        builder.dropdown(key, {
-            ...Object.fromEntries(Array.from({ length: 9 }, (_, n) => [`str${n}`, `str${n}`])),
-            ...Object.fromEntries(
-                "XYZABCDEFGHIJKLMNOPQRSTUVW"
-                    .split("")
-                    .map((each) => [each, each])
-                    .concat([["ϴ", "[theta]"]]),
-            ),
+block("__raw")
+    .meta("category", "Flow")
+    .content((v) => v.text("_EXEC").textbox("content", ""))
+    .impl(({ fields }) =>
+        fields.content.replaceAll(/\{[^}]*\}/g, (it) => {
+            const ws = workspaceStore.getState().workspace!;
+            const inner = it.slice(1, -1);
+            const [type, iden] = inner.split(":");
+
+            console.log({ type, iden });
+
+            return ws.getVariable(iden, type)?.getId() ?? "{UNKNOWN}";
         }),
-    ),
-};
+    );
 
 /** adapted from https://github.com/google/blockly/blob/1fe82b23545b9a344d5365f15b01dd7bbea2bcbc/generators/javascript/javascript_generator.js#L29 */
 export const ord = {
