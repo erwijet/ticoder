@@ -1,4 +1,3 @@
-import "src/index.css";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import "@mantine/spotlight/styles.css";
