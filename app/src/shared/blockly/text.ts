@@ -24,6 +24,15 @@ block("var_str_set")
     })
     .impl(({ fields, resolve }) => `${resolve("val")}->${fields.var}`);
 
+block("val_str_from_num")
+    .meta("category", "Text")
+    .slot("val", {
+        allow: "native-num",
+        content: (v) => v.text("text of"),
+    })
+    .outputs("native-str")
+    .impl(({ resolve }) => resolve("val"));
+
 block("str_concat")
     .meta("category", "Text")
     .meta("shadow", {

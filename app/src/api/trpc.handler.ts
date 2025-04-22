@@ -143,6 +143,7 @@ const appRouter = t.router({
         ),
         top: authenticated.query(() =>
             prisma.project.findMany({
+                where: { published: true },
                 orderBy: { stars: { _count: "desc" } },
                 include: { account: true, _count: { select: { stars: true } } },
                 take: 10,
@@ -204,7 +205,9 @@ const appRouter = t.router({
             ),
         delete: authenticated.resource
             .input(z.string().cuid())
-            .mutation(({ ctx: { account }, input: id }) => prisma.project.delete({ where: { account, id } })),
+            .mutation(({ ctx: { account }, input: id }) =>
+                prisma.star.deleteMany({ where: { projectId: id } }).then(() => prisma.project.delete({ where: { account, id } })),
+            ),
         update: authenticated.resource
             .input(z.object({ id: z.string().cuid(), name: z.string(), blockly: z.string(), source: z.string(), published: z.boolean() }))
             .mutation(({ ctx: { account }, input }) => prisma.project.update({ where: { id: input.id, account }, data: input })),

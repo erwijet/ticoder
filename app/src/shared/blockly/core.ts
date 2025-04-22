@@ -46,20 +46,22 @@ export const block = createBlockBuilder({
     plugins: [shadows.register(), toolbox.register()],
 });
 
-block("__raw")
-    .meta("category", "Flow")
-    .content((v) => v.text("_EXEC").textbox("content", ""))
-    .impl(({ fields }) =>
-        fields.content.replaceAll(/\{[^}]*\}/g, (it) => {
-            const ws = workspaceStore.getState().workspace!;
-            const inner = it.slice(1, -1);
-            const [type, iden] = inner.split(":");
+if (window.location.href.includes("localhost")) {
+    block("__raw")
+        .meta("category", "Flow")
+        .content((v) => v.text("_EXEC").textbox("content", ""))
+        .impl(({ fields }) =>
+            fields.content.replaceAll(/\{[^}]*\}/g, (it) => {
+                const ws = workspaceStore.getState().workspace!;
+                const inner = it.slice(1, -1);
+                const [type, iden] = inner.split(":");
 
-            console.log({ type, iden });
+                console.log({ type, iden });
 
-            return ws.getVariable(iden, type)?.getId() ?? "{UNKNOWN}";
-        }),
-    );
+                return ws.getVariable(iden, type)?.getId() ?? "{UNKNOWN}";
+            }),
+        );
+}
 
 /** adapted from https://github.com/google/blockly/blob/1fe82b23545b9a344d5365f15b01dd7bbea2bcbc/generators/javascript/javascript_generator.js#L29 */
 export const ord = {
