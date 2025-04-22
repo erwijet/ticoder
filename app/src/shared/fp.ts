@@ -24,6 +24,10 @@ abstract class Wrapped<T> {
 
 /** @private */
 class Just<T> extends Wrapped<T> {
+    constructor(inner: T) {
+        super(inner);
+    }
+
     map<E>(fn: (it: T) => E): IntoMaybe<E> {
         return maybe(fn(this.inner));
     }

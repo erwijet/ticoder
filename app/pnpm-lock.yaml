@@ -26,6 +26,9 @@ importers:
       '@erwijet/notary':
         specifier: ^1.1.2
         version: 1.1.2
+      '@mantine/colors-generator':
+        specifier: ^7.17.4
+        version: 7.17.4(chroma-js@3.1.2)
       '@mantine/core':
         specifier: ^7.17.0
         version: 7.17.0(@mantine/hooks@7.17.0(react@18.2.0))(@types/react@18.2.55)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -86,6 +89,9 @@ importers:
       blockly:
         specifier: ^11.2.2
         version: 11.2.2
+      chroma-js:
+        specifier: ^3.1.2
+        version: 3.1.2
       framer-motion:
         specifier: ^11.0.3
         version: 11.0.3(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -1501,6 +1507,11 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
+  '@mantine/colors-generator@7.17.4':
+    resolution: {integrity: sha512-1KqfD0hnC76i43HnaAkSrT3szXC/0crfa450hx4cJqjBf5ZZ9pFWwB8qnoubtsmMpdRlHjDBhPRn/j22m1vpTg==}
+    peerDependencies:
+      chroma-js: '>=2.4.2'
+
   '@mantine/core@7.17.0':
     resolution: {integrity: sha512-AU5UFewUNzBCUXIq5Jk6q402TEri7atZW61qHW6P0GufJ2W/JxGHRvgmHOVHTVIcuWQRCt9SBSqZoZ/vHs9LhA==}
     peerDependencies:
@@ -2500,6 +2511,9 @@ packages:
   chownr@3.0.0:
     resolution: {integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==}
     engines: {node: '>=18'}
+
+  chroma-js@3.1.2:
+    resolution: {integrity: sha512-IJnETTalXbsLx1eKEgx19d5L6SRM7cH4vINw/99p/M11HCuXGRWL+6YmCm7FWFGIo6dtWuQoQi1dc5yQ7ESIHg==}
 
   citty@0.1.6:
     resolution: {integrity: sha512-tskPPKEs8D2KPafUypv2gxwJP8h/OaJmC82QQGGDQcHvXX43xF2VDACcJVmZ0EuSxkpO9Kc4MlrA3q0+FG58AQ==}
@@ -6093,6 +6107,10 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.1
       '@jridgewell/sourcemap-codec': 1.5.0
 
+  '@mantine/colors-generator@7.17.4(chroma-js@3.1.2)':
+    dependencies:
+      chroma-js: 3.1.2
+
   '@mantine/core@7.17.0(@mantine/hooks@7.17.0(react@18.2.0))(@types/react@18.2.55)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
     dependencies:
       '@floating-ui/react': 0.26.28(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -7088,6 +7106,8 @@ snapshots:
       readdirp: 4.1.2
 
   chownr@3.0.0: {}
+
+  chroma-js@3.1.2: {}
 
   citty@0.1.6:
     dependencies:

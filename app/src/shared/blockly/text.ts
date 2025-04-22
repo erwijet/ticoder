@@ -48,3 +48,17 @@ block("val_text_len")
     .slot("str", { allow: "native-str", content: (v) => v.text("length of ") })
     .outputs("native-num")
     .impl(({ resolve }) => `length(${resolve("str")})`);
+
+block("val_text_sub")
+    .meta("category", "Text")
+    .meta("shadow", {
+        source: { blockType: "val_str", fields: { value: "text" } },
+        start: { blockType: "val_num", fields: { value: 1 } },
+        size: { blockType: "val_num", fields: { value: 3 } },
+    })
+    .slot("size", { allow: "native-num", content: (v) => v.text("first") })
+    .slot("source", { allow: "native-str", content: (v) => v.text("characters from ") })
+    .slot("start", { allow: "native-num", content: (v) => v.text("starting at") })
+    .inline()
+    .outputs("native-str")
+    .impl(({ resolve }) => `sub(${resolve("source")},${resolve("start")},${resolve("size")})`);

@@ -129,6 +129,21 @@ block("list_copy")
     )
     .impl(({ fields }) => `${fields.from}->${fields.to}`);
 
+block("list_foreach")
+    .meta("category", "Lists")
+    .content((v) =>
+        v
+            .text("for each ")
+            .variable("each-var", { types: ["native-num"] })
+            .text("in")
+            .variable("list-var", { types: ["native-lst"] }),
+    )
+    .stmt("body", { allow: "*" })
+    .impl(
+        ({ fields, resolve }) =>
+            `For([theta],1,dim(${fields["list-var"]}))\n  ${fields["list-var"]}([theta])->${fields["each-var"]}\n${resolve("body")}\nEnd`,
+    );
+
 block("list_from_str")
     .meta("category", "Lists")
     .slot("str", {

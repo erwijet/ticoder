@@ -6,7 +6,7 @@ import { workspaceStore } from "shared/form/project/editor";
 export const generator = new Blockly.Generator("ticoder");
 
 const shadows = createPresetShadowsPlugin({
-    presets: ({ num }) => ({
+    presets: ({ num, str }) => ({
         num: {
             blockType: "val_num",
             fields: {
@@ -16,7 +16,7 @@ const shadows = createPresetShadowsPlugin({
         str: {
             blockType: "val_str",
             fields: {
-                value: "text",
+                value: str ?? "text",
             },
         },
         bool: {

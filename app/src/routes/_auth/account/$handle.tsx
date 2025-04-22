@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { Account, Project } from "@prisma/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { trace } from "console";
 import { ExternalLinkIcon } from "lucide-react";
 import { Suspense, useState } from "react";
@@ -86,15 +86,14 @@ function component() {
                                 </Text>
                             </Box>
 
-                            {isFollowing ? (
+                            {isFollowing ?
                                 <Button variant="outline" onClick={handleUnfollow} loading={isLoading("unfollow")}>
                                     Unfollow
                                 </Button>
-                            ) : (
-                                <Button onClick={handleFollow} loading={isLoading("follow")}>
+                            :   <Button onClick={handleFollow} loading={isLoading("follow")}>
                                     Follow
                                 </Button>
-                            )}
+                            }
                         </Group>
                     </Group>
                 </Container>
@@ -177,7 +176,9 @@ function ConnectionCard(props: { accountId: string }) {
 
                 <Group py="md" justify="space-between">
                     <Text c="dimmed">@{account.handle}</Text>
-                    {isFollowing ? <Button variant="outline">Following</Button> : <Button variant="default">Follow</Button>}
+                    {isFollowing ?
+                        <Button variant="outline">Following</Button>
+                    :   <Button variant="default">Follow</Button>}
                 </Group>
             </Stack>
         </Card>

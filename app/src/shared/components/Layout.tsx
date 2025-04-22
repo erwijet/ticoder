@@ -43,7 +43,7 @@ export const Layout = Object.assign(
                     )}
                 </div>
                 <ctx.Provider value={{ headingRef }}>
-                    <Wrapper {...rest} mod={{ wrapper: true }}>
+                    <Wrapper {...rest} mod={{ wrapper: true }} style={{ backgroundColor: "white", height: "max-content" }}>
                         <Stack>{slots.LayoutBleed}</Stack>
                         {just(slots.rest)
                             .filter((it) => it.length > 0)

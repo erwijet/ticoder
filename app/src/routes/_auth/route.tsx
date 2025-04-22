@@ -10,7 +10,7 @@ function component() {
             <SessionRenewer />
             <AppShell
                 navbar={{
-                    width: 200,
+                    width: 60,
                     breakpoint: "sm",
                 }}
             >

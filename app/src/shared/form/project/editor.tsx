@@ -47,10 +47,11 @@ export const ProjectEditor = () => {
         if (workspace?.getAllVariables().filter((it) => it.type == "native-str").length == 0)
             workspace?.createVariable("myTextVariable", "native-str");
 
+        // do shameful stuff...
+        workspaceStore.getState().set(workspace!);
+
         // and event listeners...
         workspace?.addChangeListener(shadowBlockConversionChangeListener);
-
-        workspaceStore.getState().set(workspace!);
 
         return () => {
             workspace?.removeChangeListener(shadowBlockConversionChangeListener);
@@ -66,7 +67,7 @@ export const ProjectEditor = () => {
 
         const source = workspace
             .getBlocksByType("flow_start")
-            .map((blk) => generator.blockToCode(blk))
+            .map((block) => generator.blockToCode(block))
             .join('\n"--\n');
 
         form.setFieldValue("source", processVariables(workspace, source));

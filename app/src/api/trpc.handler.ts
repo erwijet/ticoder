@@ -134,6 +134,7 @@ const appRouter = t.router({
             .query(({ input }) =>
                 prisma.project.findMany({ where: { accountId: input }, include: { account: true, _count: { select: { stars: true } } } }),
             ),
+        deleteAll: authenticated.resource.mutation(({ ctx: { account } }) => prisma.project.deleteMany({ where: { account } })),
         following: authenticated.resource.query(({ ctx: { account } }) =>
             prisma.project.findMany({
                 where: { account: { followers: { some: { followerId: account.id } } } },

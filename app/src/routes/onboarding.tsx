@@ -34,9 +34,13 @@ function component() {
     const agreedToTOS = useField({ type: "checkbox", initialValue: false });
 
     const { mutateAsync: createAccount } = trpc.account.create.useMutation();
+    const { mutateAsync: duplicateProject } = trpc.project.duplicate.useMutation();
+    const { mutateAsync: updateProject } = trpc.project.update.useMutation();
 
     async function handleCreateAccount() {
         await createAccount({ displayName: name.getValue(), handle: username.getValue() }).catch(alert.error);
+        await duplicateProject("cm9ipmwam0002w09gr9ups4ji").then((project) => updateProject({ ...project, name: "HELLO" })); // "HELLO" starter project
+
         nav({ to: "/" });
         alert.ok("Account created.");
     }

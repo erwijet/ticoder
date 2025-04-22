@@ -26,3 +26,21 @@ block("val_screen_last_key_pressed")
     .content((v) => v.text("code of last key pressed"))
     .outputs("native-num")
     .impl(() => `getKey`);
+
+block("screen_clrhome")
+    .meta("category", "Screen")
+    .content((v) => v.text("clear screen"))
+    .impl(() => "ClrHome");
+
+block("screen_write")
+    .meta("category", "Screen")
+    .meta("shadow", {
+        str: { blockType: "val_str", fields: { value: "text" } },
+        col: { blockType: "val_num", fields: { value: 1 } },
+        row: { blockType: "val_num", fields: { value: 1 } },
+    })
+    .inline()
+    .slot("str", { allow: "native-str", content: (v) => v.text("show") })
+    .slot("row", { allow: "native-num", content: (v) => v.text("at row") })
+    .slot("col", { allow: "native-num", content: (v) => v.text("and column") })
+    .impl(({ resolve }) => `Output(${resolve("row")},${resolve("col")},${resolve("str")}`);

@@ -19,7 +19,7 @@ export function useProjectActions(opts: { id: string; project: ProjectState; onI
 
     async function sendToCalculator() {
         const loader = alert.createLoader("Sending to calculator...");
-        await choose().catch(loader.dismiss);
+        await choose().catch(loader.error);
 
         const result = await compileProject(opts.id).catch(loader.error);
 
@@ -29,9 +29,9 @@ export function useProjectActions(opts: { id: string; project: ProjectState; onI
         }
 
         await just(result.bytes)
-            .map(Uint8Array.from)
-            .map(tifiles.parseFile)
-            .take((file) => runPromising((didSend) => queueFile(file, didSend)));
+            .map((it) => Uint8Array.from(it))
+            .map((it) => tifiles.parseFile(it))
+            .take((file) => runPromising((resolve) => queueFile(file, resolve)));
 
         loader.ok("Sent to calculator.");
     }
