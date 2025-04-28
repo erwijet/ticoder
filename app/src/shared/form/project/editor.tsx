@@ -45,7 +45,10 @@ export const ProjectEditor = () => {
     useEffect(() => {
         // set up default variables...
         if (workspace?.getAllVariables().filter((it) => it.type == "native-str").length == 0)
-            workspace?.createVariable("myTextVariable", "native-str");
+            workspace?.createVariable("my text variable", "native-str");
+
+        if (workspace?.getAllVariables().filter((it) => it.type == "native-num").length == 0)
+            workspace?.createVariable("my number", "native-num");
 
         // do shameful stuff...
         workspaceStore.getState().set(workspace!);

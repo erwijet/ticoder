@@ -141,7 +141,7 @@ block("list_foreach")
     .stmt("body", { allow: "*" })
     .impl(
         ({ fields, resolve }) =>
-            `For([theta],1,dim(${fields["list-var"]}))\n  ${fields["list-var"]}([theta])->${fields["each-var"]}\n${resolve("body")}\nEnd`,
+            `For([theta],1,dim(${fields["list-var"]}))\n${fields["list-var"]}([theta]->${fields["each-var"]}\n${resolve("body")}\nEnd`,
     );
 
 block("list_from_str")
@@ -152,11 +152,9 @@ block("list_from_str")
             v
                 .text("set")
                 .variable("list", { types: ["native-lst"] })
-                .text("to characters of"),
+                .text("to values of"),
     })
     .impl(
         ({ fields, resolve }) =>
-            `seq(inString("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ",sub(${resolve("str")},[theta],1)),[theta],1,length(${resolve("str")}->${
-                fields.list
-            }`,
+            `seq(inString({@@charmap},sub(${resolve("str")},[theta],1)),[theta],1,length(${resolve("str")}->${fields.list}`,
     );

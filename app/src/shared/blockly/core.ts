@@ -44,6 +44,11 @@ export const block = createBlockBuilder({
     generator,
     customTypes: ["native-str", "native-num", "native-lst", "ctx-menu", "bool"],
     plugins: [shadows.register(), toolbox.register()],
+    variables: {
+        getDefaultVariableName(type) {
+            return workspaceStore.getState().workspace?.getVariablesOfType(type).at(0)?.name ?? null;
+        },
+    },
 });
 
 if (window.location.href.includes("localhost")) {

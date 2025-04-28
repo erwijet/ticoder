@@ -8,11 +8,6 @@ const projectStateSchema = z.object({
     blockly: z.string(),
     source: z.string(),
     published: z.boolean(),
-    variables: z.object({
-        id: z.string(),
-        name: z.string(),
-        type: z.string(),
-    }),
 });
 
 export type ProjectState = z.infer<typeof projectStateSchema>;

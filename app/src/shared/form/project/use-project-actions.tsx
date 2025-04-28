@@ -7,11 +7,10 @@ import { runPromising } from "shared/fns";
 import { createProjectResourceParams, ProjectState } from "shared/form/project/context";
 import { just, maybe } from "shared/fp";
 import { useTiCalc } from "shared/react-ticalc";
-import { useTracer } from "shared/use-tracer";
 import { tifiles } from "ticalc-usb";
 
-export function useProjectActions(opts: { id: string; project: ProjectState; onInvalidate?: () => unknown }) {
-    const { choose, queueFile } = useTiCalc();
+export function useProjectActions(conf: { id: string; project: ProjectState; onInvalidate?: () => unknown }) {
+    const { choose, queueFile, calc } = useTiCalc();
     const { mutateAsync: compileProject } = trpc.project.compile.useMutation();
     const { mutateAsync: duplicateProject } = trpc.project.duplicate.useMutation();
     const { mutateAsync: updateProject } = trpc.project.update.useMutation();
@@ -19,9 +18,9 @@ export function useProjectActions(opts: { id: string; project: ProjectState; onI
 
     async function sendToCalculator() {
         const loader = alert.createLoader("Sending to calculator...");
-        await choose().catch(loader.error);
+        if (!calc) await choose().catch(loader.error);
 
-        const result = await compileProject(opts.id).catch(loader.error);
+        const result = await compileProject(conf.id).catch(loader.error);
 
         if (!result) {
             loader.error("Failed to compile project.");
@@ -33,19 +32,19 @@ export function useProjectActions(opts: { id: string; project: ProjectState; onI
             .map((it) => tifiles.parseFile(it))
             .take((file) => runPromising((resolve) => queueFile(file, resolve)));
 
-        loader.ok("Sent to calculator.");
+        loader.ok(`Sent to ${calc?.name}.`);
     }
 
     async function duplicate() {
-        await duplicateProject(opts.id).catch(alert.error);
+        await duplicateProject(conf.id).catch(alert.error);
         alert.ok("Duplicated project.");
-        opts.onInvalidate?.();
+        conf.onInvalidate?.();
     }
 
     async function download8xp() {
         const loader = alert.createLoader("Building project...");
 
-        const result = await compileProject(opts.id).catch(loader.error);
+        const result = await compileProject(conf.id).catch(loader.error);
 
         if (!result) {
             loader.error("Could not build project.");
@@ -53,7 +52,7 @@ export function useProjectActions(opts: { id: string; project: ProjectState; onI
         }
 
         downloadBlob(new Uint8Array(result.bytes), {
-            name: opts.project.name.toUpperCase().slice(0, 8) + ".8xp",
+            name: conf.project.name.toUpperCase().slice(0, 8) + ".8xp",
             type: "application/octet-stream",
         });
 
@@ -62,23 +61,23 @@ export function useProjectActions(opts: { id: string; project: ProjectState; onI
 
     async function makePrivate() {
         await updateProject({
-            id: opts.id,
-            ...createProjectResourceParams(opts.project),
+            id: conf.id,
+            ...createProjectResourceParams(conf.project),
             published: false,
         }).catch(alert.error);
 
-        opts.onInvalidate?.();
+        conf.onInvalidate?.();
         alert.ok("Project is private.");
     }
 
     async function makePublic() {
         await updateProject({
-            id: opts.id,
-            ...createProjectResourceParams(opts.project),
+            id: conf.id,
+            ...createProjectResourceParams(conf.project),
             published: true,
         }).catch(alert.error);
 
-        opts.onInvalidate?.();
+        conf.onInvalidate?.();
         alert.ok("Project is public.");
     }
 
@@ -97,9 +96,9 @@ export function useProjectActions(opts: { id: string; project: ProjectState; onI
                 onCancel: reject,
                 async onConfirm() {
                     const loader = alert.createLoader("Deleting project...");
-                    await deleteProject(opts.id).catch(loader.error);
+                    await deleteProject(conf.id).catch(loader.error);
 
-                    opts.onInvalidate?.();
+                    conf.onInvalidate?.();
                     loader.ok("Deleted project.");
                     resolve();
                 },

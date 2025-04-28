@@ -84,8 +84,8 @@ importers:
         specifier: ^18.2.19
         version: 18.2.19
       better-blockly:
-        specifier: ^0.3.0
-        version: 0.3.0(blockly@11.2.2)
+        specifier: ^0.4.0
+        version: 0.4.0(blockly@11.2.2)
       blockly:
         specifier: ^11.2.2
         version: 11.2.2
@@ -2408,8 +2408,8 @@ packages:
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
 
-  better-blockly@0.3.0:
-    resolution: {integrity: sha512-ULSq4jgMfHlQ0O0R75S5M+GtZ+4v1vWJDLP/TNPlagVQePCiF8AZsrHWoDveJjNRlPDAyH+qfDitNrji8Dv4YA==}
+  better-blockly@0.4.0:
+    resolution: {integrity: sha512-kjKCfUib/huJH1NvpZNZrgipl31AztWiHCWL6zDsBQVs+7H+5UZt8U0BfGzm52oTUeRs39+zvJ6pXA8utZAs9w==}
     peerDependencies:
       blockly: ^11.0.0
 
@@ -6982,7 +6982,7 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  better-blockly@0.3.0(blockly@11.2.2):
+  better-blockly@0.4.0(blockly@11.2.2):
     dependencies:
       '@tsly/arr': 1.7.0
       '@tsly/maybe': 1.2.0

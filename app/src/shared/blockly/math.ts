@@ -87,6 +87,17 @@ block("var_num")
     .outputs("native-num")
     .impl(({ fields }) => fields.var);
 
+block("var_num_set_bool")
+    .meta("category", "Math")
+    .content((v) =>
+        v
+            .text("set")
+            .variable("var", { types: ["native-num"] })
+            .text("to")
+            .dropdown("val", { True: "1", False: "0" }),
+    )
+    .impl(({ fields }) => `${fields.val}->${fields.var}`);
+
 block("var_num_set")
     .meta("category", "Math")
     .meta("shadow-field:num", "val")

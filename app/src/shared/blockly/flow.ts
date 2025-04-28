@@ -32,7 +32,7 @@ block("flow_if_else")
     .stmt("then", { allow: "*" })
     .content((v) => v.text("else"))
     .stmt("else", { allow: "*" })
-    .impl(({ resolve }) => `If ${resolve("cond")}\nThen\n${resolve("then")}\nElse\n${resolve("else")}End`);
+    .impl(({ resolve }) => `If ${resolve("cond")}\nThen\n${resolve("then")}\nElse\n${resolve("else")}\nEnd`);
 
 block("flow_menu")
     .meta("category", "Flow")
