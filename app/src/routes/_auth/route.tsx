@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_auth")({
     component,
     beforeLoad: async () => {
         const token = session.getToken();
-        if (!token) throw redirect({ to: "/login" });
+        if (!token) throw redirect({ to: "/login", search: { to: window.location.pathname } });
 
         // check for account
         const account = await api.account.self.get.query();

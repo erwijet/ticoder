@@ -6,11 +6,11 @@ import {
     BracesIcon,
     CalculatorIcon,
     ChevronDownIcon,
+    CopyIcon,
     Edit3Icon,
     FileCode2Icon,
     FileCogIcon,
-    FileUpIcon,
-    PlayIcon,
+    GitBranchIcon,
     SaveIcon,
     TrashIcon,
     UsbIcon,
@@ -35,18 +35,20 @@ import { useTracer } from "shared/use-tracer";
 
 function component() {
     const nav = useNavigate();
-    const { id } = useParams({ from: "/_auth/projects/$id" });
+    const { id } = Route.useParams();
+    const { account } = Route.useRouteContext();
 
-    const [data, { refetch }] = trpc.project.get.useSuspenseQuery(id);
+    const [data] = trpc.project.get.useSuspenseQuery(id);
     const { mutateAsync: updateProject } = trpc.project.update.useMutation();
-    const { mutateAsync: compileProject } = trpc.project.compile.useMutation();
 
     const form = useProjectForm({
         initialValues: createProjectState(data),
         validate,
     });
 
-    const tracer = useTracer("save", "update", "send");
+    const isOwner = data.accountId == account.id;
+
+    const tracer = useTracer("save", "update", "send", "remix");
     const actions = useProjectActions({ id, project: form.values });
     const { choose, calc } = useTiCalc();
     const [sourceDrawerOpened, sourceDrawer] = useDisclosure();
@@ -66,6 +68,15 @@ function component() {
             .trace("save")(updateProject({ id, ...createProjectResourceParams(form.getValues()) }))
             .then(() => loader.ok("Saved"))
             .catch(loader.error);
+    }
+
+    async function handleRemix() {
+        return tracer.trace("remix")(
+            actions.duplicate().then((it) => {
+                if (!it) return;
+                nav({ to: "/projects/$id", params: { id: it.id } }).then(() => window.location.reload());
+            }),
+        );
     }
 
     async function handleSendToCalculator() {
@@ -132,12 +143,12 @@ function component() {
                     <Group wrap="nowrap" gap={0}>
                         <Button
                             variant="default"
-                            leftSection={<SaveIcon size={16} />}
-                            loading={tracer.isLoading("save")}
-                            onClick={handleSave}
+                            leftSection={isOwner ? <SaveIcon size={16} /> : <GitBranchIcon size={16} />}
+                            loading={isOwner ? tracer.isLoading("save") : tracer.isLoading("remix")}
+                            onClick={isOwner ? handleSave : handleRemix}
                             style={{ borderTopRightRadius: "0", borderBottomRightRadius: "0" }}
                         >
-                            Save
+                            {isOwner ? "Save" : "Remix"}
                         </Button>
                         <Menu>
                             <Menu.Target>
@@ -167,11 +178,15 @@ function component() {
                                 <Menu.Item leftSection={<BracesIcon size={16} />} onClick={sourceDrawer.open}>
                                     View Generated Code
                                 </Menu.Item>
+                                <Menu.Item leftSection={<CopyIcon size={16} />} onClick={handleRemix}>
+                                    Make a Copy
+                                </Menu.Item>
                                 <Menu.Divider />
                                 <Menu.Item
                                     color="red"
                                     leftSection={<TrashIcon size={16} />}
                                     onClick={() => actions.promptDelete().then(() => nav({ to: "/projects" }))}
+                                    disabled={!isOwner}
                                 >
                                     Delete
                                 </Menu.Item>

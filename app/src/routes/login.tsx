@@ -1,12 +1,19 @@
-import { Image, Card, Stack, Title, Text, Space, Button } from "@mantine/core";
-import { api, trpc } from "shared/api";
-import { GoogleSvg } from "shared/svg/Google";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { Button, Card, Image, Space, Stack, Text, Title } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { trpc } from "shared/api";
+import { GoogleSvg } from "shared/svg/Google";
 import brand from "src/public/brand.png";
+import { z } from "zod";
 
 function component() {
     const [{ url }] = trpc.session.authenticate.useSuspenseQuery("google");
+    const to = Route.useSearch()?.to;
+
+    useEffect(() => {
+        if (to) localStorage.setItem("dev.ticoder.app.login-target", to);
+        else localStorage.removeItem("dev.ticoder.app.login-target");
+    }, [to]);
 
     function handleSignInWithGoogle() {
         window.location.href = url;
@@ -54,5 +61,6 @@ function component() {
 }
 
 export const Route = createFileRoute("/login")({
+    validateSearch: z.object({ to: z.string().optional() }),
     component,
 });

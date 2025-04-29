@@ -36,9 +36,10 @@ export function useProjectActions(conf: { id: string; project: ProjectState; onI
     }
 
     async function duplicate() {
-        await duplicateProject(conf.id).catch(alert.error);
+        const result = await duplicateProject(conf.id).catch(alert.error);
         alert.ok("Duplicated project.");
         conf.onInvalidate?.();
+        return result;
     }
 
     async function download8xp() {

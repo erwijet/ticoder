@@ -110,7 +110,7 @@ function ProjectCard(props: ProjectCardProps) {
                             </Menu.Target>
                             <Menu.Dropdown>
                                 <Menu.Item onClick={actions.sendToCalculator}>Send to Calculator</Menu.Item>
-                                <Menu.Item onClick={actions.duplicate}>Duplicate</Menu.Item>
+                                <Menu.Item onClick={actions.duplicate}>Make a Copy</Menu.Item>
                                 <Menu.Item onClick={handleDownloadTxt}>Download .txt</Menu.Item>
                                 <Menu.Item onClick={actions.download8xp}>Download .8xp</Menu.Item>
                                 {props.project.published ?

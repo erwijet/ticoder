@@ -12,7 +12,9 @@ function component() {
     useEffect(() => {
         session.setToken(token);
         qc.invalidateQueries({ queryKey: session.queryOptions().queryKey });
-        nav({ to: "/" });
+        const to = localStorage.getItem("dev.ticoder.app.login-target") ?? "/";
+
+        nav({ to });
     }, [token, nav]);
 
     return (

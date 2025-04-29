@@ -152,7 +152,7 @@ block("list_from_str")
             v
                 .text("set")
                 .variable("list", { types: ["native-lst"] })
-                .text("to values of"),
+                .text("to letter values of"),
     })
     .impl(
         ({ fields, resolve }) =>
