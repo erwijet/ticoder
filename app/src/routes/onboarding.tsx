@@ -41,7 +41,9 @@ function component() {
         await createAccount({ displayName: name.getValue(), handle: username.getValue() }).catch(alert.error);
         await duplicateProject("cm9ipmwam0002w09gr9ups4ji").then((project) => updateProject({ ...project, name: "HELLO" })); // "HELLO" starter project
 
-        nav({ to: "/" });
+        const to = localStorage.getItem("dev.ticoder.app.login-target") ?? "/";
+        window.location.href = to;
+
         alert.ok("Account created.");
     }
 

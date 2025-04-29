@@ -127,6 +127,14 @@ const appRouter = t.router({
                 },
             }),
         ),
+        delete: authenticated.resource.mutation(async ({ ctx: { account } }) => {
+            await prisma.star.deleteMany({ where: { account } });
+            await prisma.star.deleteMany({ where: { project: { account } } });
+            await prisma.follower.deleteMany({ where: { following: account } });
+            await prisma.follower.deleteMany({ where: { follower: account } });
+            await prisma.project.deleteMany({ where: { account } });
+            await prisma.account.delete({ where: account });
+        }),
     },
     projects: {
         ownedBy: authenticated.resource

@@ -52,7 +52,7 @@ model Follower {
   followingId String
   followedAt  DateTime @default(now())
 
-  followers Account @relation("Followers", fields: [followerId], references: [id])
+  follower Account @relation("Followers", fields: [followerId], references: [id])
   following Account @relation("Following", fields: [followingId], references: [id])
 
   @@unique([followerId, followingId])

@@ -65,6 +65,7 @@ export function Navbar() {
     );
 
     const { mutateAsync: deleteAllProjects } = trpc.projects.deleteAll.useMutation();
+    const { mutateAsync: deleteAccount } = trpc.account.delete.useMutation();
 
     function handle(action: "go-profile" | "go-logout" | "share" | "erase-all" | "delete-account") {
         match(action)
@@ -81,7 +82,10 @@ export function Navbar() {
                 modals.openConfirmModal({
                     title: <Title order={3}>Delete Account</Title>,
                     children: (
-                        <Text>Are you sure you want to delete your account and all associated data? This action cannot be undone.</Text>
+                        <Text>
+                            Are you sure you want to delete your account and all associated data including your stars, follower list,
+                            following list, and projects? This action cannot be undone.
+                        </Text>
                     ),
                     labels: {
                         cancel: "Cancel",
@@ -90,6 +94,11 @@ export function Navbar() {
                     confirmProps: {
                         color: "red",
                         leftSection: <HeartCrackIcon size={16} />,
+                    },
+                    onConfirm() {
+                        deleteAccount()
+                            .then(() => nav({ to: "/logout" }))
+                            .then(() => alert.ok("See ya."));
                     },
                 });
             })
