@@ -36,13 +36,14 @@ export const toolbox = createToolboxPlugin({
         Lists: { color: "rgb(207, 99, 207)" },
         Text: { color: "rgb(255, 140, 26)" },
         Logic: { color: "rgb(92, 177, 214)" },
+        Tasks: { color: "rgb(255, 102, 128)" },
     },
 });
 
 export const block = createBlockBuilder({
     Blockly,
     generator,
-    customTypes: ["native-str", "native-num", "native-lst", "ctx-menu", "bool"],
+    customTypes: ["native-str", "native-num", "native-lst", "ctx-menu", "bool", "task"],
     plugins: [shadows.register(), toolbox.register()],
     variables: {
         getDefaultVariableName(type) {

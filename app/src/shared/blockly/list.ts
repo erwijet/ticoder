@@ -107,6 +107,15 @@ block("val_list_contains")
     .outputs("bool")
     .impl(({ fields, resolve }) => `max(not(${fields.list}-${resolve("item")}))`);
 
+block("val_random_list")
+    .meta("category", "Lists")
+    .slot("size", { allow: "native-num", content: (v) => v.text("list of ") })
+    .slot("lower", { allow: "native-num", content: (v) => v.text("random integers from ") })
+    .slot("upper", { allow: "native-num", content: (v) => v.text("to") })
+    .outputs("native-lst")
+    .inline()
+    .impl(({ resolve }) => `randInt(${resolve("lower")},${resolve("upper")},${resolve("size")}`);
+
 block("val_list_minmax")
     .meta("category", "Lists")
     .content((v) =>

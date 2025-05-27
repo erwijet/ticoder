@@ -1,8 +1,10 @@
-import { Button, Stack, TextInput } from "@mantine/core";
+import { Button, Stack, Text, TextInput, Title, Group } from "@mantine/core";
 import { useField } from "@mantine/form";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { CheckCircle2Icon, X } from "lucide-react";
+import { useTracer } from "./use-tracer";
+import { maybe } from "./fp";
 
 export const alert = {
     error(msg: Error | string) {
@@ -13,11 +15,31 @@ export const alert = {
             message: msg instanceof Error ? msg.message : msg,
         });
     },
-    async ask(msg: string, opts?: { confirmText?: string; label?: string }) {
-        const { promise, resolve, reject } = Promise.withResolvers();
+    async popup(msg: string, opts?: { title?: string }) {
+        const { promise, resolve } = Promise.withResolvers<void>();
 
         modals.open({
-            title: msg,
+            title: maybe(opts?.title)?.take((title) => <Title order={3}>{title}</Title>),
+            children: (
+                <Stack>
+                    <Text size="sm">{msg}</Text>
+                    <Group justify="flex-end">
+                        <Button variant="default" onClick={modals.closeAll}>
+                            Okay
+                        </Button>
+                    </Group>
+                </Stack>
+            ),
+            onClose: resolve,
+        });
+
+        return promise;
+    },
+    async ask(title: string, opts?: { confirmText?: string; label?: string }): Promise<string> {
+        const { promise, resolve, reject } = Promise.withResolvers<string>();
+
+        modals.open({
+            title: <Title order={3}>{title}</Title>,
             onClose: () => reject(),
             children: (
                 <RequestModalPane

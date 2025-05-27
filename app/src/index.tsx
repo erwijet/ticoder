@@ -6,7 +6,6 @@ import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { ReactNode, StrictMode } from "react";
 import ReactDOM from "react-dom/client";
@@ -33,7 +32,6 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <StrictMode>
         <trpc.Provider client={client} queryClient={qc}>
             <QueryClientProvider client={qc}>
-                {/* <ReactQueryDevtools initialIsOpen={false} /> */}
                 <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver}>
                     <ModalsProvider modalProps={{ centered: true }}>
                         <Notifications />

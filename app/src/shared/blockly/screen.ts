@@ -40,7 +40,7 @@ block("screen_write")
         row: { blockType: "val_num", fields: { value: 1 } },
     })
     .inline()
-    .slot("str", { allow: "native-str", content: (v) => v.text("show") })
+    .slot("str", { allow: "native-str", content: (v) => v.text("draw") })
     .slot("row", { allow: "native-num", content: (v) => v.text("at row") })
     .slot("col", { allow: "native-num", content: (v) => v.text("and column") })
     .impl(({ resolve }) => `Output(${resolve("row")},${resolve("col")},${resolve("str")}`);

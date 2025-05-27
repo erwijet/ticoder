@@ -121,7 +121,7 @@ export function Navbar() {
                         {navRoutes
                             .filter((it) => !it.options.staticData?.nav?.parent)
                             .map((route) => (
-                                <Link to={route.fullPath} style={{ width: "min-content", margin: "0px auto" }}>
+                                <Link to={route.fullPath} style={{ width: "min-content", margin: "0px auto" }} preload="render">
                                     <Tooltip label={route.options.staticData?.nav?.title} position="right">
                                         <ActionIcon
                                             component="div"

@@ -1,9 +1,9 @@
-import { ActionIcon, Button, Divider, Group, Menu, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
+import { ActionIcon, Anchor, Button, Divider, Group, Menu, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
 import { useField } from "@mantine/form";
 import { modals } from "@mantine/modals";
 import { Project } from "@prisma/client";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { EllipsisVerticalIcon, PencilIcon, SearchIcon } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ChevronDown, ChevronDownIcon, EllipsisVerticalIcon, PencilIcon, SearchIcon } from "lucide-react";
 import { useDeferredValue } from "react";
 import { alert } from "shared/alert";
 import { trpc } from "shared/api";
@@ -70,10 +70,6 @@ function ProjectCard(props: ProjectCardProps) {
     const [, { refetch }] = trpc.project.mine.useSuspenseQuery();
     const actions = useProjectActions({ id: props.project.id, project: createProjectState(props.project), onInvalidate: () => refetch() });
 
-    function handleEdit() {
-        nav({ to: "/projects/$id", params: { id: props.project.id } });
-    }
-
     function handleDownloadTxt() {
         downloadBlob(props.project.source, {
             name: props.project.name + ".txt",
@@ -87,7 +83,12 @@ function ProjectCard(props: ProjectCardProps) {
                 <Group justify="space-between">
                     <Stack gap={0}>
                         <Group>
-                            <Text>{props.project.name}</Text>
+                            <Link to="/projects/$id" params={{ id: props.project.id }} preload="render">
+                                <Anchor c="black" fw="bold">
+                                    {props.project.name}
+                                </Anchor>
+                            </Link>
+                            {/* <Text>{props.project.name}</Text> */}
                             {props.project.published ?
                                 <PublicBadge />
                             :   <PrivateBadge />}
@@ -98,31 +99,26 @@ function ProjectCard(props: ProjectCardProps) {
                         </Text>
                     </Stack>
 
-                    <ActionIcon.Group>
-                        <ActionIcon variant="default" onClick={handleEdit}>
-                            <PencilIcon size={16} />
-                        </ActionIcon>
-                        <Menu>
-                            <Menu.Target>
-                                <ActionIcon variant="default">
-                                    <EllipsisVerticalIcon size={16} />
-                                </ActionIcon>
-                            </Menu.Target>
-                            <Menu.Dropdown>
-                                <Menu.Item onClick={actions.sendToCalculator}>Send to Calculator</Menu.Item>
-                                <Menu.Item onClick={actions.duplicate}>Make a Copy</Menu.Item>
-                                <Menu.Item onClick={handleDownloadTxt}>Download .txt</Menu.Item>
-                                <Menu.Item onClick={actions.download8xp}>Download .8xp</Menu.Item>
-                                {props.project.published ?
-                                    <Menu.Item onClick={actions.makePrivate}>Make Private</Menu.Item>
-                                :   <Menu.Item onClick={actions.makePublic}>Make Public</Menu.Item>}
-                                <Menu.Divider />
-                                <Menu.Item c="red" onClick={actions.promptDelete}>
-                                    Delete
-                                </Menu.Item>
-                            </Menu.Dropdown>
-                        </Menu>
-                    </ActionIcon.Group>
+                    <Menu position="bottom-end">
+                        <Menu.Target>
+                            <ActionIcon variant="transparent" c="black">
+                                <EllipsisVerticalIcon size={16} />
+                            </ActionIcon>
+                        </Menu.Target>
+                        <Menu.Dropdown>
+                            <Menu.Item onClick={actions.sendToCalculator}>Send to Calculator</Menu.Item>
+                            <Menu.Item onClick={actions.duplicate}>Make a Copy</Menu.Item>
+                            <Menu.Item onClick={handleDownloadTxt}>Download .txt</Menu.Item>
+                            <Menu.Item onClick={actions.download8xp}>Download .8xp</Menu.Item>
+                            {props.project.published ?
+                                <Menu.Item onClick={actions.makePrivate}>Make Private</Menu.Item>
+                            :   <Menu.Item onClick={actions.makePublic}>Make Public</Menu.Item>}
+                            <Menu.Divider />
+                            <Menu.Item c="red" onClick={actions.promptDelete}>
+                                Delete
+                            </Menu.Item>
+                        </Menu.Dropdown>
+                    </Menu>
                 </Group>
             </Stack>
         </Paper>

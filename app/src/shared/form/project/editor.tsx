@@ -5,16 +5,20 @@ import * as Blockly from "blockly/core";
 import { useDeferredValue, useEffect, useRef } from "react";
 import { useBlocklyWorkspace } from "react-blockly";
 import { generator, toolbox } from "shared/blockly/core";
-
 import { useLayout } from "shared/components/Layout";
-import { runCatching } from "shared/fns";
+import { run, runCatching, runPromising } from "shared/fns";
 import { useProjectFormContext } from "shared/form/project/context";
+import { validateWorkspace } from "shared/blockly/validate";
 import { processVariables } from "shared/blockly/postprocess";
 import { create } from "zustand";
+import { alert } from "shared/alert";
+import { match } from "ts-pattern";
 
 export const workspaceStore = create<{ set: (workspace: Blockly.Workspace) => void; workspace?: Blockly.Workspace }>()((set) => ({
     set: (ws: Blockly.Workspace) => set({ workspace: ws }),
 }));
+
+export const useWorkspace = () => workspaceStore((s) => s.workspace);
 
 export const ProjectEditor = () => {
     const layout = useLayout();
@@ -30,6 +34,7 @@ export const ProjectEditor = () => {
                 snap: true,
                 spacing: 16,
             },
+            renderer: "Thrasos",
             theme: {
                 name: "ticoder",
                 base: Blockly.Themes.Zelos,
@@ -45,10 +50,15 @@ export const ProjectEditor = () => {
     useEffect(() => {
         // set up default variables...
         if (workspace?.getAllVariables().filter((it) => it.type == "native-str").length == 0)
-            workspace?.createVariable("my text variable", "native-str");
+            workspace?.createVariable("my text", "native-str");
 
         if (workspace?.getAllVariables().filter((it) => it.type == "native-num").length == 0)
             workspace?.createVariable("my number", "native-num");
+
+        if (workspace?.getAllVariables().filter((it) => it.type == "native-lst").length == 0)
+            workspace?.createVariable("my list", "native-lst");
+
+        if (workspace?.getAllVariables().filter((it) => it.type == "task").length == 0) workspace?.createVariable("my task", "task");
 
         // do shameful stuff...
         workspaceStore.getState().set(workspace!);
@@ -66,14 +76,31 @@ export const ProjectEditor = () => {
     useEffect(() => {
         if (!workspace) return;
 
-        form.setFieldValue("blockly", JSON.stringify(json));
+        run(async () => {
+            form.setFieldValue("blockly", JSON.stringify(json));
 
-        const source = workspace
-            .getBlocksByType("flow_start")
-            .map((block) => generator.blockToCode(block))
-            .join('\n"--\n');
+            const validation = validateWorkspace(workspace);
+            console.log({ validation });
+            if (validation.isErr()) {
+                await alert.popup(validation.error.msg, {
+                    title: match(validation.error.type)
+                        .with("internal", () => "Internal Error")
+                        .with("validation", () => "Issue with Project")
+                        .exhaustive(),
+                });
 
-        form.setFieldValue("source", processVariables(workspace, source));
+                alert.error("Invalid workspace.");
+
+                return;
+            }
+
+            const source = workspace
+                .getBlocksByType("flow_start")
+                .map((block) => generator.blockToCode(block))
+                .join('\n"--\n');
+
+            form.setFieldValue("source", processVariables(workspace, source));
+        });
     }, [deferredJson]);
 
     return (

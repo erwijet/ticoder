@@ -1,4 +1,4 @@
-import { ActionIcon, Anchor, Button, Code, Divider, Drawer, Group, Menu, Stack, Text, Title } from "@mantine/core";
+import { ActionIcon, Anchor, Button, Code, Divider, Drawer, Group, Loader, Menu, Modal, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
@@ -6,21 +6,28 @@ import {
     BracesIcon,
     CalculatorIcon,
     ChevronDownIcon,
+    CircleFadingPlusIcon,
     CopyIcon,
     Edit3Icon,
     FileCode2Icon,
     FileCogIcon,
     GitBranchIcon,
+    PlusCircleIcon,
+    ReceiptRussianRuble,
     SaveIcon,
+    Trash2Icon,
     TrashIcon,
     UsbIcon,
+    VariableIcon,
 } from "lucide-react";
 import { alert } from "shared/alert";
 import { trpc } from "shared/api";
 import { Layout } from "shared/components/Layout";
+import { PageLoader } from "shared/components/page-loader";
 import { ProjectNamePanel } from "shared/components/panel/ProjectNamePanel";
 import { downloadBlob } from "shared/download";
-import { runPromising } from "shared/fns";
+import { run, runPromising } from "shared/fns";
+import { BlocklyVariablePanel } from "shared/form/project/blockly-variable-panel";
 import {
     createProjectResourceParams,
     createProjectState,
@@ -28,15 +35,17 @@ import {
     useProjectForm,
     validate,
 } from "shared/form/project/context";
-import { ProjectEditor } from "shared/form/project/editor";
+import { ProjectEditor, useWorkspace } from "shared/form/project/editor";
 import { useProjectActions } from "shared/form/project/use-project-actions";
 import { useTiCalc } from "shared/react-ticalc";
 import { useTracer } from "shared/use-tracer";
+import { match } from "ts-pattern";
 
 function component() {
     const nav = useNavigate();
     const { id } = Route.useParams();
     const { account } = Route.useRouteContext();
+    const workspace = useWorkspace();
 
     const [data] = trpc.project.get.useSuspenseQuery(id);
     const { mutateAsync: updateProject } = trpc.project.update.useMutation();
@@ -52,6 +61,7 @@ function component() {
     const actions = useProjectActions({ id, project: form.values });
     const { choose, calc } = useTiCalc();
     const [sourceDrawerOpened, sourceDrawer] = useDisclosure();
+    const [variablesOpened, variables] = useDisclosure();
 
     async function handleDownloadTxt() {
         downloadBlob(form.values.source, {
@@ -71,12 +81,35 @@ function component() {
     }
 
     async function handleRemix() {
-        return tracer.trace("remix")(
-            actions.duplicate().then((it) => {
-                if (!it) return;
-                nav({ to: "/projects/$id", params: { id: it.id } }).then(() => window.location.reload());
-            }),
-        );
+        const name = await alert.ask("Test", { confirmText: "Remix" });
+        alert.ok(name);
+
+        modals.openConfirmModal({
+            closeOnConfirm: false,
+            title: <Title order={3}>Remix Project</Title>,
+            children: (
+                <Text size="sm">Are you sure you want to remix this project? This will create a copy of this project that you own.</Text>
+            ),
+            labels: {
+                confirm: "Remix",
+                cancel: "Cancel",
+            },
+            confirmProps: {
+                loading: tracer.isLoading("remix"),
+            },
+            onConfirm() {
+                tracer.trace("remix")(
+                    run(async () => {
+                        const result = await actions.duplicate();
+                        if (!result) return;
+
+                        await nav({ to: "/projects/$id", params: { id: result.id } });
+                        window.location.reload();
+                        modals.closeAll();
+                    }),
+                );
+            },
+        });
     }
 
     async function handleSendToCalculator() {
@@ -109,8 +142,58 @@ function component() {
         });
     }
 
+    async function handleCreateVariable(type: "native-num" | "native-str" | "native-lst" | "task") {
+        if (!workspace) return;
+
+        const varName = await alert.ask(
+            match(type)
+                .with("native-lst", () => "Create List Variable")
+                .with("native-num", () => "Create Number Variable")
+                .with("native-str", () => "Create Text Variable")
+                .with("task", () => "Create Task")
+                .exhaustive(),
+            { confirmText: "Create", label: "Name" },
+        );
+
+        workspace.createVariable(varName, type);
+        alert.ok("Created.");
+    }
+
     return (
         <ProjectFormProvider form={form}>
+            <Drawer
+                opened={variablesOpened}
+                title={
+                    <Group>
+                        <Title order={3}>Project Variables</Title>
+                        <Menu>
+                            <Menu.Target>
+                                <Button variant="default" size="compact-md" leftSection={<CircleFadingPlusIcon size={16} />}>
+                                    Create
+                                </Button>
+                            </Menu.Target>
+                            <Menu.Dropdown>
+                                <Menu.Item color="red" onClick={() => handleCreateVariable("native-num")}>
+                                    Number Variable
+                                </Menu.Item>
+                                <Menu.Item color="orange" onClick={() => handleCreateVariable("native-str")}>
+                                    Text Variable
+                                </Menu.Item>
+                                <Menu.Item color="violet" onClick={() => handleCreateVariable("native-lst")}>
+                                    List Variable
+                                </Menu.Item>
+                                <Menu.Item color="pink" onClick={() => handleCreateVariable("task")}>
+                                    Task
+                                </Menu.Item>
+                            </Menu.Dropdown>
+                        </Menu>
+                    </Group>
+                }
+                onClose={variables.close}
+                position="right"
+            >
+                <BlocklyVariablePanel />
+            </Drawer>
             <Drawer
                 opened={sourceDrawerOpened}
                 title={<Title order={3}>Generated TIBasic</Title>}
@@ -167,7 +250,7 @@ function component() {
                             </Menu.Target>
                             <Menu.Dropdown>
                                 <Menu.Item onClick={handleSelectCalculator} leftSection={<UsbIcon size={16} />}>
-                                    Select Calculator
+                                    Connect Calculator
                                 </Menu.Item>
                                 <Menu.Item leftSection={<FileCode2Icon size={16} />} onClick={handleDownloadTxt}>
                                     Download .txt
@@ -177,6 +260,9 @@ function component() {
                                 </Menu.Item>
                                 <Menu.Item leftSection={<BracesIcon size={16} />} onClick={sourceDrawer.open}>
                                     View Generated Code
+                                </Menu.Item>
+                                <Menu.Item leftSection={<VariableIcon size={16} />} onClick={variables.open}>
+                                    Manage Variables
                                 </Menu.Item>
                                 <Menu.Item leftSection={<CopyIcon size={16} />} onClick={handleRemix}>
                                     Make a Copy
@@ -206,7 +292,7 @@ function component() {
                             {calc.name}
                         </Button>
                     :   <Button variant="default" leftSection={<UsbIcon size={16} />} onClick={handleSelectCalculator}>
-                            Select Calculator
+                            Connect Calculator
                         </Button>
                     }
                 </Layout.Action>
@@ -221,4 +307,5 @@ function component() {
 
 export const Route = createFileRoute("/_auth/projects/$id")({
     component,
+    pendingComponent: PageLoader,
 });
