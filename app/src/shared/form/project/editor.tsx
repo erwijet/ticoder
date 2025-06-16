@@ -13,6 +13,10 @@ import { processVariables } from "shared/blockly/postprocess";
 import { create } from "zustand";
 import { alert } from "shared/alert";
 import { match } from "ts-pattern";
+import { LexicalVariablesPlugin } from "@mit-app-inventor/blockly-block-lexical-variables/core";
+import { WorkspaceSearch } from "@blockly/plugin-workspace-search";
+import { Multiselect } from "@mit-app-inventor/blockly-plugin-workspace-multiselect";
+import { maybe } from "shared/fp";
 
 export const workspaceStore = create<{ set: (workspace: Blockly.Workspace) => void; workspace?: Blockly.Workspace }>()((set) => ({
     set: (ws: Blockly.Workspace) => set({ workspace: ws }),
@@ -35,11 +39,16 @@ export const ProjectEditor = () => {
                 spacing: 16,
             },
             renderer: "Thrasos",
+            zoom: { wheel: true },
+            comments: true,
             theme: {
                 name: "ticoder",
-                base: Blockly.Themes.Zelos,
+                base: "zelos",
                 componentStyles: {
                     workspaceBackgroundColour: "#222222",
+                    toolboxBackgroundColour: "var(--mantine-color-body)",
+                    flyoutForegroundColour: "#00000000",
+                    flyoutBackgroundColour: "var(--mantine-color-violet-1)",
                 },
             },
         },
@@ -65,6 +74,18 @@ export const ProjectEditor = () => {
 
         // and event listeners...
         workspace?.addChangeListener(shadowBlockConversionChangeListener);
+
+        // and other nonsense
+        maybe(workspace)
+            ?.run((it) => new WorkspaceSearch(it).init())
+            .run((it) => LexicalVariablesPlugin.init(it))
+            .run((it) =>
+                new Multiselect(it).init({
+                    multiselectIcon: {
+                        hideIcon: true,
+                    },
+                }),
+            );
 
         return () => {
             workspace?.removeChangeListener(shadowBlockConversionChangeListener);

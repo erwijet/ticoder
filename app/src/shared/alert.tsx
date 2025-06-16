@@ -35,7 +35,7 @@ export const alert = {
 
         return promise;
     },
-    async ask(title: string, opts?: { confirmText?: string; label?: string }): Promise<string> {
+    async ask(title: string, opts?: { confirmText?: string; label?: string; initialValue?: string }): Promise<string> {
         const { promise, resolve, reject } = Promise.withResolvers<string>();
 
         modals.open({
@@ -95,8 +95,8 @@ export const alert = {
     },
 };
 
-const RequestModalPane = (props: { label?: string; confirmText?: string; onConfirm?: (value: string) => void }) => {
-    const field = useField({ initialValue: "" });
+const RequestModalPane = (props: { label?: string; initialValue?: string; confirmText?: string; onConfirm?: (value: string) => void }) => {
+    const field = useField({ initialValue: props.initialValue ?? "" });
 
     return (
         <Stack>

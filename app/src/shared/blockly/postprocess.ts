@@ -58,7 +58,7 @@ export function processVariables(workspace: Blockly.Workspace, source: string): 
         charmap: {
             type: "str",
             reg: null,
-            createPrelude: (reg: string) => `"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_ 1234567890->${reg}`,
+            createPrelude: (reg: string) => `"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_ 1234567890!@#$%^&*()-=_+->${reg}`,
         },
     };
 

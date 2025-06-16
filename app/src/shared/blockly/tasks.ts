@@ -15,3 +15,9 @@ block("task_run")
     .meta("category", "Tasks")
     .content((v) => v.text("run task").variable("var", { types: ["task"] }))
     .impl(({ fields }) => `{:call ${fields.var}}`);
+
+block("task_ret")
+    .meta("category", "Tasks")
+    .content((v) => v.text("exit task"))
+    .preceeds("none")
+    .impl(() => `Goto {@@lblret}`);

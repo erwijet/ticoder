@@ -1,5 +1,5 @@
 import * as Blockly from "blockly/core";
-import { createBlockBuilder, createToolboxPlugin } from "better-blockly";
+import { createBlockBuilder, createToolboxPlugin, createValidationPlugin } from "better-blockly";
 import { createPresetShadowsPlugin } from "shared/blockly/plugin";
 import { workspaceStore } from "shared/form/project/editor";
 
@@ -31,6 +31,7 @@ const shadows = createPresetShadowsPlugin({
 export const toolbox = createToolboxPlugin({
     categories: {
         Flow: { color: "rgb(153, 102, 255)" },
+        Menu: { color: "#0F7173" },
         Math: { color: "rgb(255, 51, 85)" },
         Screen: { color: "rgb(102, 204, 102)" },
         Lists: { color: "rgb(207, 99, 207)" },
@@ -40,11 +41,13 @@ export const toolbox = createToolboxPlugin({
     },
 });
 
+const validation = createValidationPlugin();
+
 export const block = createBlockBuilder({
     Blockly,
     generator,
     customTypes: ["native-str", "native-num", "native-lst", "ctx-menu", "bool", "task"],
-    plugins: [shadows.register(), toolbox.register()],
+    plugins: [shadows.register(), toolbox.register(), validation.register()],
     variables: {
         getDefaultVariableName(type) {
             return workspaceStore.getState().workspace?.getVariablesOfType(type).at(0)?.name ?? null;
@@ -55,14 +58,13 @@ export const block = createBlockBuilder({
 if (window.location.href.includes("localhost")) {
     block("__raw")
         .meta("category", "Flow")
+        .meta("validate", ({ warn }) => warn("DEBUG USE ONLY!"))
         .content((v) => v.text("_EXEC").textbox("content", ""))
         .impl(({ fields }) =>
             fields.content.replaceAll(/\{[^}]*\}/g, (it) => {
                 const ws = workspaceStore.getState().workspace!;
                 const inner = it.slice(1, -1);
                 const [type, iden] = inner.split(":");
-
-                console.log({ type, iden });
 
                 return ws.getVariable(iden, type)?.getId() ?? "{UNKNOWN}";
             }),
@@ -107,3 +109,12 @@ export const ord = {
     COMMA: 18, // ,
     NONE: 99, // (...)
 };
+
+export function shadowNum(n: number) {
+    return {
+        blockType: "val_num",
+        fields: {
+            value: n,
+        },
+    };
+}

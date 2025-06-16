@@ -1,4 +1,4 @@
-import { block } from "shared/blockly/core";
+import { block, shadowNum } from "shared/blockly/core";
 
 block("list_set_dim")
     .meta("category", "Lists")
@@ -106,6 +106,42 @@ block("val_list_contains")
     .slot("item", { allow: "native-num", content: (v) => v.variable("list", { types: ["native-lst"] }).text("contains") })
     .outputs("bool")
     .impl(({ fields, resolve }) => `max(not(${fields.list}-${resolve("item")}))`);
+
+block("val_seq_no_var")
+    .meta("category", "Lists")
+    .meta("shadow", {
+        size: shadowNum(3),
+        expr: shadowNum(10),
+    })
+    .slot("size", { allow: "native-num", content: (v) => v.text("list of ") })
+    .slot("expr", { allow: "native-num", content: (v) => v.text("copies of") })
+    .inline()
+    .outputs("native-lst")
+    .impl(({ resolve }) => `seq(${resolve("expr")},[theta],1,${resolve("size")})`);
+
+block("val_seq")
+    .meta("category", "Lists")
+    .meta("shadow", {
+        start: shadowNum(1),
+        stop: shadowNum(10),
+        expr: {
+            blockType: "var_num",
+            fields: {},
+        },
+    })
+    .slot("expr", { allow: "native-num", content: (v) => v.text("list of ") })
+    .slot("start", {
+        allow: "native-num",
+        content: (v) =>
+            v
+                .text("where")
+                .variable("var", { types: ["native-num"] })
+                .text("goes from"),
+    })
+    .slot("stop", { allow: "native-num", content: (v) => v.text("to") })
+    .inline()
+    .outputs("native-num")
+    .impl(({ fields, resolve }) => `seq(${resolve("expr")},${fields.var},${resolve("start")},${resolve("start")})`);
 
 block("val_random_list")
     .meta("category", "Lists")

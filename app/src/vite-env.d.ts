@@ -13,3 +13,6 @@ interface ImportMeta {
 //
 
 declare module "monaco-vim";
+declare module "@mit-app-inventor/blockly-plugin-workspace-multiselect";
+declare module "@mit-app-inventor/blockly-block-lexical-variables";
+declare module "@mit-app-inventor/blockly-block-lexical-variables/core";

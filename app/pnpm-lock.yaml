@@ -8,9 +8,9 @@ importers:
 
   .:
     dependencies:
-      '@blockly/block-shareable-procedures':
-        specifier: ^5.0.12
-        version: 5.0.12(blockly@11.2.2)
+      '@blockly/plugin-workspace-search':
+        specifier: ^10.0.1
+        version: 10.0.1(blockly@11.2.2)
       '@blockly/shadow-block-converter':
         specifier: ^6.0.13
         version: 6.0.13(blockly@11.2.2)
@@ -47,6 +47,12 @@ importers:
       '@mantine/spotlight':
         specifier: ^7.17.0
         version: 7.17.0(@mantine/core@7.17.0(@mantine/hooks@7.17.0(react@18.2.0))(@types/react@18.2.55)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@mantine/hooks@7.17.0(react@18.2.0))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@mit-app-inventor/blockly-block-lexical-variables':
+        specifier: ^3.0.1
+        version: 3.0.1(blockly@11.2.2)
+      '@mit-app-inventor/blockly-plugin-workspace-multiselect':
+        specifier: ^1.0.1
+        version: 1.0.1(blockly@11.2.2)
       '@monaco-editor/react':
         specifier: ^4.6.0
         version: 4.6.0(monaco-editor@0.47.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -84,8 +90,8 @@ importers:
         specifier: ^18.2.19
         version: 18.2.19
       better-blockly:
-        specifier: ^0.4.0
-        version: 0.4.0(blockly@11.2.2)
+        specifier: ^0.5.0
+        version: 0.5.0(blockly@11.2.2)
       blockly:
         specifier: ^11.2.2
         version: 11.2.2
@@ -399,11 +405,11 @@ packages:
     resolution: {integrity: sha512-Y3IR1cRnOxOCDvMmNiym7XpXQ93iGDDPHx+Zj+NM+rg0fBaShfQLkg+hKPaZCEvg5N/LeCo4+Rj/i3FuJsIQaw==}
     engines: {node: '>=6.9.0'}
 
-  '@blockly/block-shareable-procedures@5.0.12':
-    resolution: {integrity: sha512-8MKbf18IisSpcs2nWPMa9pOIhAhDJB3SY0i3wUEMpYiJzF3dyYcrLWh/MVadKye1I/65pvk/zal8gPo4Ys6TvQ==}
+  '@blockly/plugin-workspace-search@10.0.1':
+    resolution: {integrity: sha512-dAktnv49MvLKoYBT/75F7LVTA3eB21VyvquxHLfQuVZ02i4BW6LzGRf6isqhn9S6c526FulcQjfRyWT9zeCRdg==}
     engines: {node: '>=8.17.0'}
     peerDependencies:
-      blockly: ^11.0.0
+      blockly: ^12.0.0
 
   '@blockly/shadow-block-converter@6.0.13':
     resolution: {integrity: sha512-gY3Ol3P2rU00gp2rIWCwM5CSd3/4RdQUVlwg60iGKmMUXrZQyL9UFFKp6EDuaZm9Znaou0Yjt3coslJJLR5vDQ==}
@@ -1566,6 +1572,18 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  '@mit-app-inventor/blockly-block-lexical-variables@3.0.1':
+    resolution: {integrity: sha512-oixFcDoM8xa46IP4xzmMdxNNfpQqyrUpqVJXLAlnURbyHbqy8JQ2xNFpn+6FTB5JqokQXVx3WDVGdCKDkliVlQ==}
+    engines: {node: '>=8.17.0'}
+    peerDependencies:
+      blockly: ^10.4.0
+
+  '@mit-app-inventor/blockly-plugin-workspace-multiselect@1.0.1':
+    resolution: {integrity: sha512-Qh9fhtP1D6N4FnC+kf/C1g/7rMmHyhVrR12vXzSlhRWuKCv5MizbDqGiXyDdo7IFErEoypvtJ9zigtwWtzdFxg==}
+    engines: {node: '>=8.17.0'}
+    peerDependencies:
+      blockly: '>=11'
+
   '@monaco-editor/loader@1.4.0':
     resolution: {integrity: sha512-00ioBig0x642hytVspPl7DbQyaSWRaolYie/UFNjoTdvoKPzo6xrXLhTk9ixgIKcLH5b5vDOjVNiGyY+uDCUlg==}
     peerDependencies:
@@ -2411,8 +2429,8 @@ packages:
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
 
-  better-blockly@0.4.0:
-    resolution: {integrity: sha512-kjKCfUib/huJH1NvpZNZrgipl31AztWiHCWL6zDsBQVs+7H+5UZt8U0BfGzm52oTUeRs39+zvJ6pXA8utZAs9w==}
+  better-blockly@0.5.0:
+    resolution: {integrity: sha512-Sb+fdDTEzb1YP2pQDfgquVjkPHTBCojhLNFMmcM9c808vfWTqpPWXLxWCq5rM59lrUBfsFpS7NLIyxfks6lxdA==}
     peerDependencies:
       blockly: ^11.0.0
 
@@ -2782,6 +2800,9 @@ packages:
   dotenv@16.4.7:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
     engines: {node: '>=12'}
+
+  dragselect@2.7.4:
+    resolution: {integrity: sha512-j0qFl4xvsyImlSTn9erDCCT4SSPUMssgKAYuKqhsPr8WPphLghHfjDd4WR2jLjL91fTQQlbbIJ/7T2qwD2hghQ==}
 
   duplexer@0.1.2:
     resolution: {integrity: sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==}
@@ -4938,7 +4959,7 @@ snapshots:
       '@babel/helper-string-parser': 7.25.9
       '@babel/helper-validator-identifier': 7.25.9
 
-  '@blockly/block-shareable-procedures@5.0.12(blockly@11.2.2)':
+  '@blockly/plugin-workspace-search@10.0.1(blockly@11.2.2)':
     dependencies:
       blockly: 11.2.2
 
@@ -6183,6 +6204,15 @@ snapshots:
       - encoding
       - supports-color
 
+  '@mit-app-inventor/blockly-block-lexical-variables@3.0.1(blockly@11.2.2)':
+    dependencies:
+      blockly: 11.2.2
+
+  '@mit-app-inventor/blockly-plugin-workspace-multiselect@1.0.1(blockly@11.2.2)':
+    dependencies:
+      blockly: 11.2.2
+      dragselect: 2.7.4
+
   '@monaco-editor/loader@1.4.0(monaco-editor@0.47.0)':
     dependencies:
       monaco-editor: 0.47.0
@@ -6989,7 +7019,7 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  better-blockly@0.4.0(blockly@11.2.2):
+  better-blockly@0.5.0(blockly@11.2.2):
     dependencies:
       '@tsly/arr': 1.7.0
       '@tsly/maybe': 1.2.0
@@ -7328,6 +7358,8 @@ snapshots:
       type-fest: 4.35.0
 
   dotenv@16.4.7: {}
+
+  dragselect@2.7.4: {}
 
   duplexer@0.1.2: {}
 

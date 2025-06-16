@@ -1,4 +1,4 @@
-import { block, ord } from "shared/blockly/core";
+import { block, ord, shadowNum } from "shared/blockly/core";
 import { match } from "ts-pattern";
 
 block("math_add")
@@ -63,7 +63,6 @@ block("math_sqrt")
     .meta("category", "Math")
     .meta("shadow-field:num", "val")
     .slot("val", { allow: "native-num", content: (v) => v.text("√") })
-    .inline()
     .outputs("native-num")
     .impl(({ resolve }) => ({ value: `[root]^2(${resolve("val")})`, order: ord.EXPONENTIATION }));
 
@@ -114,6 +113,26 @@ block("var_num_set")
 block("val_math_unary_fn")
     .meta("category", "Math")
     .meta("shadow-field:num", "val")
-    .slot("val", { allow: "native-num", content: (v) => v.dropdown("op", { "absolute value": "abs", sum: "sum" }).text("of") })
+    .slot("val", { allow: "native-num", content: (v) => v.dropdown("op", { "absolute value": "abs", floor: "floor" }).text("of") })
     .outputs("native-num")
     .impl(({ fields, resolve }) => `${fields.op}(${resolve("val")})`);
+
+block("val_math_xpart")
+    .meta("category", "Math")
+    .meta("shadow", { val: shadowNum(10.2) })
+    .slot("val", { allow: "native-num", content: (v) => v.dropdown("op", { integer: "iPart", decimal: "fPart" }).text("part of") })
+    .outputs("native-num")
+    .extern()
+    .impl(({ resolve, fields }) => `${fields.op}(${resolve("val")})`);
+
+block("val_rand_int")
+    .meta("category", "Math")
+    .meta("shadow", {
+        lower: shadowNum(1),
+        upper: shadowNum(10),
+    })
+    .slot("lower", { allow: "native-num", content: (v) => v.text("random integer from ") })
+    .slot("upper", { allow: "native-num", content: (v) => v.text("to ") })
+    .inline()
+    .outputs("native-num")
+    .impl(({ resolve }) => `randInt(${resolve("lower")},${resolve("upper")})`);

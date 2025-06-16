@@ -17,7 +17,7 @@ block("logic_eq")
 block("logic_not")
     .meta("category", "Logic")
     .meta("shadow-field:bool", "arg")
-    .inline()
+    .extern()
     .outputs("bool")
     .slot("arg", { allow: "*", content: (v) => v.text("not") })
     .impl(({ resolve }) => `not(${resolve("arg")})`);
@@ -53,4 +53,4 @@ block("logic_or")
     .slot("rhs", { allow: "bool", content: (v) => v.dropdown("op", ["or", "and"]) })
     .inline()
     .outputs("bool")
-    .impl(({ fields, resolve }) => `(${resolve("lhs")} ${fields.op} ${resolve("rhs")})`);
+    .impl(({ fields, resolve }) => `(${resolve("lhs")}${fields.op == "or" ? " or " : "and"}${resolve("rhs")})`);

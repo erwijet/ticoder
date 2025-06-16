@@ -75,7 +75,7 @@ block("str_concat")
             fields: { value: "world" },
         },
     })
-    .slot("lhs", { allow: "native-str", content: (v) => v.text("join") })
+    .slot("lhs", { allow: "native-str", content: (v) => v })
     .slot("rhs", { allow: "native-str", content: (v) => v.text("with") })
     .inline()
     .outputs("native-str")
@@ -97,7 +97,7 @@ block("val_text_sub")
     })
     .slot("size", { allow: "native-num", content: (v) => v.text("first") })
     .slot("source", { allow: "native-str", content: (v) => v.text("letters of ") })
-    .slot("start", { allow: "native-num", content: (v) => v.text("starting at") })
+    .slot("start", { allow: "native-num", content: (v) => v.text("starting at letter") })
     .inline()
     .outputs("native-str")
     .impl(({ resolve }) => `sub(${resolve("source")},${resolve("start")},${resolve("size")})`);

@@ -41,6 +41,16 @@ export const BlocklyVariablePanel = () => {
 
     const [search, setSearch] = useState("");
 
+    async function handleRenameVariable(varId: string) {
+        if (!workspace) return;
+        const varName = workspace.getVariableById(varId)!.name;
+        const varType = workspace.getVariableById(varId)!.type;
+
+        const renamed = await alert.ask("Rename variable", { confirmText: "Rename", label: "Name", initialValue: varName });
+
+        workspace.renameVariableById(varId, renamed);
+    }
+
     async function handleDeleteVariable(varId: string) {
         if (!workspace) return;
         const varName = workspace.getVariableById(varId)!.name;
@@ -87,7 +97,7 @@ export const BlocklyVariablePanel = () => {
                 </Table.Thead>
                 <Table.Tbody>
                     {data
-                        ?.filter((it) => it.name.includes(search.trim()))
+                        ?.filter((it) => it.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()))
                         .map((each) => (
                             <Table.Tr key={each.getId()}>
                                 <Table.Td>
@@ -120,7 +130,7 @@ export const BlocklyVariablePanel = () => {
                                 <Table.Td>
                                     <ActionIcon.Group>
                                         <Tooltip label="Rename">
-                                            <ActionIcon variant="default">
+                                            <ActionIcon variant="default" onClick={() => handleRenameVariable(each.getId())}>
                                                 <TextCursorInputIcon size={16} />
                                             </ActionIcon>
                                         </Tooltip>

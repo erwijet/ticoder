@@ -20,9 +20,8 @@ function component() {
     const [data] = trpc.project.mine.useSuspenseQuery();
     const nav = useNavigate();
     const search = useField({ initialValue: "" });
-    const deferredSearch = useDeferredValue(search.getValue());
+    const deferredSearch = useDeferredValue(search.getValue().toLocaleLowerCase());
     const projects = data.filter((it) => it.name.toLocaleLowerCase().includes(deferredSearch));
-    const tracer = useTracer("create");
 
     const { mutateAsync: createProject } = trpc.project.create.useMutation();
 

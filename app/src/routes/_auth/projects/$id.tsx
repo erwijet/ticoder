@@ -1,5 +1,5 @@
 import { ActionIcon, Anchor, Button, Code, Divider, Drawer, Group, Loader, Menu, Modal, Stack, Text, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useHotkeys } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import {
@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { alert } from "shared/alert";
 import { trpc } from "shared/api";
+import { KbdShortcut } from "shared/components/kbd-shortcut";
 import { Layout } from "shared/components/Layout";
 import { PageLoader } from "shared/components/page-loader";
 import { ProjectNamePanel } from "shared/components/panel/ProjectNamePanel";
@@ -62,6 +63,13 @@ function component() {
     const { choose, calc } = useTiCalc();
     const [sourceDrawerOpened, sourceDrawer] = useDisclosure();
     const [variablesOpened, variables] = useDisclosure();
+
+    useHotkeys([
+        ["mod + shift + v", variables.open],
+        ["mod + s", handleSave],
+        ["mod + b", actions.download8xp],
+        ["mod + shift + b", handleDownloadTxt],
+    ]);
 
     async function handleDownloadTxt() {
         downloadBlob(form.values.source, {
@@ -252,16 +260,28 @@ function component() {
                                 <Menu.Item onClick={handleSelectCalculator} leftSection={<UsbIcon size={16} />}>
                                     Connect Calculator
                                 </Menu.Item>
-                                <Menu.Item leftSection={<FileCode2Icon size={16} />} onClick={handleDownloadTxt}>
+                                <Menu.Item
+                                    leftSection={<FileCode2Icon size={16} />}
+                                    onClick={handleDownloadTxt}
+                                    rightSection={<KbdShortcut>mod shift+b</KbdShortcut>}
+                                >
                                     Download .txt
                                 </Menu.Item>
-                                <Menu.Item leftSection={<FileCogIcon size={16} />} onClick={actions.download8xp}>
+                                <Menu.Item
+                                    leftSection={<FileCogIcon size={16} />}
+                                    onClick={actions.download8xp}
+                                    rightSection={<KbdShortcut>mod + b</KbdShortcut>}
+                                >
                                     Download .8xp
                                 </Menu.Item>
                                 <Menu.Item leftSection={<BracesIcon size={16} />} onClick={sourceDrawer.open}>
                                     View Generated Code
                                 </Menu.Item>
-                                <Menu.Item leftSection={<VariableIcon size={16} />} onClick={variables.open}>
+                                <Menu.Item
+                                    leftSection={<VariableIcon size={16} />}
+                                    onClick={variables.open}
+                                    rightSection={<KbdShortcut>mod shift + v</KbdShortcut>}
+                                >
                                     Manage Variables
                                 </Menu.Item>
                                 <Menu.Item leftSection={<CopyIcon size={16} />} onClick={handleRemix}>

@@ -21,32 +21,23 @@ block("flow_comment")
 block("flow_if")
     .meta("category", "Flow")
     .slot("cond", { allow: "bool", content: (v) => v.text("if ") })
-    .content((v) => v.text("then"))
     .stmt("then", { allow: "*" })
+    .extern()
     .impl(({ resolve }) => `If ${resolve("cond")}\nThen\n${resolve("then")}\nEnd`);
 
 block("flow_if_else")
     .meta("category", "Flow")
     .slot("cond", { allow: "bool", content: (v) => v.text("if ") })
-    .content((v) => v.text("then"))
     .stmt("then", { allow: "*" })
     .content((v) => v.text("else"))
     .stmt("else", { allow: "*" })
+    .extern()
     .impl(({ resolve }) => `If ${resolve("cond")}\nThen\n${resolve("then")}\nElse\n${resolve("else")}\nEnd`);
 
-block("flow_menu")
+block("flow_wait_for_keypress")
     .meta("category", "Flow")
-    .content((v) => v.text("Show menu ").textbox("message", "message"))
-    .stmt("body", { allow: "ctx-menu" })
-    .impl(() => "");
-
-block("flow_menu_option")
-    .meta("category", "Flow")
-    .follows("ctx-menu")
-    .preceeds("ctx-menu")
-    .content((v) => v.text("Menu Option").textbox("OPTION", "text"))
-    .stmt("body", { allow: "*" })
-    .impl(() => "");
+    .content((v) => v.text("wait until a key is pressed"))
+    .impl(() => `Repeat Ans\n  getKey\nEnd`);
 
 block("flow_wait")
     .meta("category", "Flow")
